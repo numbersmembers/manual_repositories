@@ -38,10 +38,14 @@ export function AppSidebar() {
     <div className="flex h-screen bg-card border-r w-64 flex-col hidden md:flex transition-colors">
       <div className="p-6 border-b">
         <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
-          <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-black">
+          <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-black shrink-0">
             B
           </div>
-          Bloter/Numbers<span className="text-muted-foreground font-light"> Manual</span>
+          <div className="flex flex-col leading-none">
+            <span>Bloter/Numbers</span>
+            <span className="text-muted-foreground font-light text-sm">Manual</span>
+            <span className="text-muted-foreground font-light text-xs opacity-70">Repositories</span>
+          </div>
         </h1>
       </div>
 
@@ -115,10 +119,13 @@ export function MobileSidebar() {
         <div className="h-full flex flex-col bg-background">
           <div className="p-6 border-b flex items-center justify-between">
              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-black">
+                <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-black shrink-0">
                   B
                 </div>
-                <h1 className="text-lg font-bold tracking-tight">Bloter/Numbers M</h1>
+                <div className="flex flex-col leading-none">
+                  <span className="text-lg font-bold tracking-tight">Bloter/Numbers</span>
+                  <span className="text-sm text-muted-foreground">Mobile</span>
+                </div>
              </div>
              {/* Mode Toggle in Mobile Menu */}
              <div className="scale-90 origin-right">
