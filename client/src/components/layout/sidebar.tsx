@@ -43,12 +43,11 @@ export function AppSidebar() {
           </div>
           <div className="flex flex-col leading-none">
             <span>Bloter/Numbers</span>
-            <span className="text-muted-foreground font-light text-sm">Manual</span>
+            <span className="text-muted-foreground text-[20px] font-bold">Manual</span>
             <span className="text-muted-foreground font-light text-xs opacity-70">Repositories</span>
           </div>
         </h1>
       </div>
-
       <div className="flex-1 py-6 px-4 space-y-1">
         <div className="text-xs font-semibold text-muted-foreground mb-4 px-2 uppercase tracking-wider">
           Menu
@@ -68,7 +67,6 @@ export function AppSidebar() {
           </Link>
         ))}
       </div>
-
       <div className="p-4 border-t bg-muted/30">
         <div className="flex items-center gap-3 mb-4">
           <Avatar className="h-9 w-9 border">
