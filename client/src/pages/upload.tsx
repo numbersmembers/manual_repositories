@@ -143,8 +143,14 @@ export default function UploadPage() {
   // Flattened categories for select with indentation
   const flattenedCategories = () => {
     const list: { id: string, name: string, level: number }[] = [];
-    const traverse = (parentId: string | null, level: number) => {
-      const children = categories.filter(c => c.parentId === parentId);
+    const traverse = (parentId: string | null | undefined, level: number) => {
+      const children = categories.filter(c => {
+        // Handle both null and undefined for root categories
+        if (parentId === null || parentId === undefined) {
+          return c.parentId === null || c.parentId === undefined || c.parentId === '';
+        }
+        return c.parentId === parentId;
+      });
       children.forEach(c => {
         list.push({ id: c.id, name: c.name, level });
         traverse(c.id, level + 1);
