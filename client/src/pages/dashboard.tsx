@@ -19,7 +19,7 @@ export default function Dashboard() {
     if (user?.level === 3) return true; // Admin sees all
     if (user?.level === 2) return doc.securityLevel !== 'secret'; // Staff sees Important + General
     return doc.securityLevel === 'general'; // General sees General only
-  });
+  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const recentDocs = accessibleDocs.slice(0, 4);
 
