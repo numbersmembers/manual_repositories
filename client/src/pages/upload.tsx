@@ -1,28 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
-import { MOCK_CATEGORIES, buildCategoryTree } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, File, X, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Upload, X, CheckCircle2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Category } from "@/lib/types";
+import { categoryApi, documentApi } from "@/lib/api";
+import { useLocation } from "wouter";
 
 export default function UploadPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   
   // Form State
   const [title, setTitle] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [securityLevel, setSecurityLevel] = useState("general");
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const cats = await categoryApi.getAll();
+      setCategories(cats);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "카테고리 로드 실패",
+        description: error.message || "카테고리 목록을 불러오는데 실패했습니다."
+      });
+    }
+  };
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -54,6 +73,24 @@ export default function UploadPage() {
     }
   };
 
+  const getFileType = (filename: string): string => {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf': return 'pdf';
+      case 'xls':
+      case 'xlsx': return 'excel';
+      case 'doc':
+      case 'docx': return 'ms_word';
+      case 'hwp': return 'hwp';
+      case 'txt': return 'text';
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif': return 'image';
+      default: return 'text';
+    }
+  };
+
   const handleUpload = async () => {
     if (!file || !title || !categoryId) {
       toast({
@@ -66,27 +103,48 @@ export default function UploadPage() {
 
     setUploading(true);
     
-    // Simulate upload delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setUploading(false);
-    toast({
-      title: "업로드 성공",
-      description: "문서가 성공적으로 등록되었습니다."
-    });
-    
-    // Reset form
-    setFile(null);
-    setTitle("");
-    setSecurityLevel("general");
-    // Keep categoryId as users might upload multiple files to same cat
+    try {
+      const fileType = getFileType(file.name);
+      const fileSizeKB = (file.size / 1024).toFixed(2);
+      const fileSize = file.size < 1024 * 1024 
+        ? `${fileSizeKB} KB` 
+        : `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+
+      await documentApi.create({
+        title,
+        type: fileType,
+        securityLevel,
+        categoryId,
+        url: '#', // In a real app, this would be the uploaded file URL
+        size: fileSize
+      });
+
+      toast({
+        title: "업로드 성공",
+        description: "문서가 성공적으로 등록되었습니다."
+      });
+      
+      // Reset form and redirect
+      setFile(null);
+      setTitle("");
+      setSecurityLevel("general");
+      setLocation('/documents');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "업로드 실패",
+        description: error.message || "문서 업로드에 실패했습니다."
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Flattened categories for select with indentation
   const flattenedCategories = () => {
     const list: { id: string, name: string, level: number }[] = [];
     const traverse = (parentId: string | null, level: number) => {
-      const children = MOCK_CATEGORIES.filter(c => c.parentId === parentId);
+      const children = categories.filter(c => c.parentId === parentId);
       children.forEach(c => {
         list.push({ id: c.id, name: c.name, level });
         traverse(c.id, level + 1);

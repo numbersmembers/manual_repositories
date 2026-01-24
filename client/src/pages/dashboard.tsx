@@ -1,32 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
-import { MOCK_CATEGORIES, MOCK_DOCUMENTS } from "@/lib/mock-data";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, FileSpreadsheet, FileIcon, Lock, ShieldAlert, Folder, Download, Eye } from "lucide-react";
+import { FileText, FileSpreadsheet, FileIcon, Lock, ShieldAlert, Folder, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Document, Category } from "@/lib/types";
 import { DocumentViewer } from "@/components/documents/document-viewer";
 import { Link } from "wouter";
+import { documentApi, categoryApi } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Filter documents based on user level
-  const accessibleDocs = MOCK_DOCUMENTS.filter(doc => {
-    if (user?.level === 3) return true; // Admin sees all
-    if (user?.level === 2) return doc.securityLevel !== 'secret'; // Staff sees Important + General
-    return doc.securityLevel === 'general'; // General sees General only
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  const recentDocs = accessibleDocs.slice(0, 4);
+  const loadData = async () => {
+    try {
+      const [docs, cats] = await Promise.all([
+        documentApi.getAll(),
+        categoryApi.getAll()
+      ]);
+      setDocuments(docs);
+      setCategories(cats);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "데이터 로드 실패",
+        description: error.message || "데이터를 불러오는데 실패했습니다."
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const recentDocs = documents
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 4);
 
   const handleOpenDoc = (doc: Document) => {
     setSelectedDoc(doc);
     setViewerOpen(true);
   };
+
+  if (loading) {
+    return <div className="text-center py-12">로딩 중...</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -43,7 +70,7 @@ export default function Dashboard() {
             <CardTitle className="text-sm font-medium text-blue-100">총 접근 가능 문서</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold">{accessibleDocs.length}</div>
+            <div className="text-4xl font-bold">{documents.length}</div>
             <p className="text-xs text-blue-100 mt-1">전체 문서 중 접근 가능한 파일</p>
           </CardContent>
         </Card>
@@ -53,7 +80,7 @@ export default function Dashboard() {
             <CardTitle className="text-sm font-medium text-muted-foreground">최근 업로드</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold">{MOCK_DOCUMENTS.length}</div>
+            <div className="text-4xl font-bold">{documents.length}</div>
             <p className="text-xs text-muted-foreground mt-1">이번 달 신규 문서</p>
           </CardContent>
         </Card>
@@ -64,7 +91,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold">
-              {MOCK_DOCUMENTS.filter(d => d.authorId === user?.id).length}
+              {documents.filter(d => d.authorId === user?.id).length}
             </div>
             <p className="text-xs text-muted-foreground mt-1">내가 작성한 문서</p>
           </CardContent>
@@ -103,7 +130,7 @@ export default function Dashboard() {
             </h3>
           </div>
           <div className="grid grid-cols-1 gap-3">
-             {MOCK_CATEGORIES.filter(c => !c.parentId).map(cat => (
+             {categories.filter(c => !c.parentId).map(cat => (
                <Link href="/documents" key={cat.id}>
                  <div className="p-4 rounded-lg border bg-card hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer group flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -113,7 +140,7 @@ export default function Dashboard() {
                       <div>
                         <div className="font-medium group-hover:text-primary transition-colors">{cat.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {MOCK_CATEGORIES.filter(c => c.parentId === cat.id).length} 하위 카테고리
+                          {categories.filter(c => c.parentId === cat.id).length} 하위 카테고리
                         </div>
                       </div>
                     </div>

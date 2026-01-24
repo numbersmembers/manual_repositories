@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, USER_LEVELS } from '@/lib/types';
-import { MOCK_USERS } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -19,27 +18,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check local storage for persisted session
-    const storedUser = localStorage.getItem('bloter_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        localStorage.removeItem('bloter_user');
-      }
-    }
-    setIsLoading(false);
+    // Check for existing session on mount
+    checkSession();
   }, []);
+
+  const checkSession = async () => {
+    try {
+      const response = await fetch('/api/auth/me', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          level: userData.level,
+          status: userData.status,
+          isAdmin: userData.isAdmin === 1,
+          avatarUrl: userData.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.email}`
+        });
+      }
+    } catch (error) {
+      console.error('Session check failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const login = async (email: string) => {
     setIsLoading(true);
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email }),
+      });
 
-    const foundUser = MOCK_USERS.find(u => u.email === email);
-    
-    if (foundUser) {
-      if (foundUser.status === 'banned') {
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast({
+          variant: "destructive",
+          title: "로그인 실패",
+          description: errorData.message || "로그인에 실패했습니다."
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      const userData = await response.json();
+      
+      if (userData.status === 'banned') {
         toast({
           variant: "destructive",
           title: "접근 거부됨",
@@ -48,43 +81,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
         return;
       }
-      
-      setUser(foundUser);
-      localStorage.setItem('bloter_user', JSON.stringify(foundUser));
+
+      const mappedUser: User = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        level: userData.level,
+        status: userData.status,
+        isAdmin: userData.isAdmin === 1,
+        avatarUrl: userData.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.email}`
+      };
+
+      setUser(mappedUser);
       toast({
         title: "로그인 성공",
-        description: `${foundUser.name}님 환영합니다.`
+        description: `${mappedUser.name}님 환영합니다.`
       });
-    } else {
-      // Create new user for demo purposes if not found (default to Level 1)
-      const newUser: User = {
-        id: `u${Date.now()}`,
-        email,
-        name: email.split('@')[0],
-        level: USER_LEVELS.GENERAL,
-        status: 'active',
-        isAdmin: false,
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
-      };
-      // In a real app, we'd wait for admin approval. Here we just log them in as Level 1
-      setUser(newUser);
-      localStorage.setItem('bloter_user', JSON.stringify(newUser));
+    } catch (error) {
+      console.error('Login error:', error);
       toast({
-        title: "신규 계정 로그인",
-        description: "게스트(Level 1) 권한으로 로그인되었습니다."
+        variant: "destructive",
+        title: "로그인 실패",
+        description: "서버와 연결할 수 없습니다."
       });
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('bloter_user');
-    // Clear any sensitive data from memory/cache conceptually
-    toast({
-      title: "로그아웃",
-      description: "안전하게 로그아웃되었습니다."
-    });
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      setUser(null);
+      toast({
+        title: "로그아웃",
+        description: "안전하게 로그아웃되었습니다."
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Clear user state anyway
+      setUser(null);
+    }
   };
 
   const checkAccess = (requiredLevel: number) => {

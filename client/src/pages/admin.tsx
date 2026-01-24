@@ -1,21 +1,43 @@
 import { useAuth } from "@/context/auth-context";
-import { MOCK_USERS } from "@/lib/mock-data";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Ban, ShieldCheck, UserCheck } from "lucide-react";
-import { useState } from "react";
+import { Ban, ShieldCheck } from "lucide-react";
+import { useState, useEffect } from "react";
 import { User } from "@/lib/types";
 import { CategoryManager } from "@/components/admin/category-manager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { userApi } from "@/lib/api";
 
 export default function AdminPage() {
   const { user, checkAccess } = useAuth();
   const { toast } = useToast();
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (checkAccess(3)) {
+      loadUsers();
+    }
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      const data = await userApi.getAll();
+      setUsers(data);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "사용자 로드 실패",
+        description: error.message || "사용자 목록을 불러오는데 실패했습니다."
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Security Check
   if (!checkAccess(3)) {
@@ -28,28 +50,48 @@ export default function AdminPage() {
     );
   }
 
-  const handleLevelChange = (userId: string, newLevel: 1 | 2 | 3) => {
-    setUsers(users.map(u => 
-      u.id === userId ? { ...u, level: newLevel, isAdmin: newLevel === 3 } : u
-    ));
-    toast({
-      title: "권한 변경 완료",
-      description: "사용자의 레벨이 업데이트되었습니다."
-    });
+  const handleLevelChange = async (userId: string, newLevel: 1 | 2 | 3) => {
+    try {
+      await userApi.updateLevel(userId, newLevel);
+      await loadUsers();
+      toast({
+        title: "권한 변경 완료",
+        description: "사용자의 레벨이 업데이트되었습니다."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "권한 변경 실패",
+        description: error.message || "권한 변경에 실패했습니다."
+      });
+    }
   };
 
-  const handleBanUser = (userId: string) => {
-    if (confirm("정말로 이 사용자를 강퇴하시겠습니까? 모든 접근 기록이 삭제됩니다.")) {
-      setUsers(users.map(u => 
-        u.id === userId ? { ...u, status: 'banned' } : u
-      ));
+  const handleBanUser = async (userId: string) => {
+    if (!confirm("정말로 이 사용자를 강퇴하시겠습니까? 모든 접근 기록이 삭제됩니다.")) {
+      return;
+    }
+
+    try {
+      await userApi.updateStatus(userId, 'banned');
+      await loadUsers();
       toast({
         variant: "destructive",
         title: "사용자 강퇴 처리",
         description: "해당 사용자는 더 이상 로그인할 수 없습니다."
       });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "강퇴 처리 실패",
+        description: error.message || "사용자 강퇴에 실패했습니다."
+      });
     }
   };
+
+  if (loading) {
+    return <div className="text-center py-12">로딩 중...</div>;
+  }
 
   return (
     <div className="space-y-6">

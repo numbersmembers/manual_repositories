@@ -1,20 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Category } from "@/lib/types";
-import { MOCK_CATEGORIES } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Folder, FolderPlus, Trash2, ChevronRight, ChevronDown, Plus } from "lucide-react";
+import { Folder, FolderPlus, Trash2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { categoryApi } from "@/lib/api";
 
 export function CategoryManager() {
-  const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [newCatName, setNewCatName] = useState("");
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const handleAddCategory = () => {
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const cats = await categoryApi.getAll();
+      setCategories(cats);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "카테고리 로드 실패",
+        description: error.message || "카테고리를 불러오는데 실패했습니다."
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddCategory = async () => {
     if (!newCatName.trim()) return;
 
     let path = newCatName;
@@ -25,22 +45,30 @@ export function CategoryManager() {
       }
     }
 
-    const newCat: Category = {
-      id: `c${Date.now()}`,
-      name: newCatName,
-      parentId: selectedParentId,
-      path: path
-    };
+    try {
+      await categoryApi.create({
+        name: newCatName,
+        parentId: selectedParentId || null,
+        path: path
+      });
 
-    setCategories([...categories, newCat]);
-    setNewCatName("");
-    toast({
-      title: "카테고리 생성 완료",
-      description: `${path} 경로에 생성되었습니다.`
-    });
+      setNewCatName("");
+      await loadCategories();
+      
+      toast({
+        title: "카테고리 생성 완료",
+        description: `${path} 경로에 생성되었습니다.`
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "카테고리 생성 실패",
+        description: error.message || "카테고리 생성에 실패했습니다."
+      });
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     // Check if has children
     if (categories.some(c => c.parentId === id)) {
       toast({
@@ -50,10 +78,27 @@ export function CategoryManager() {
       });
       return;
     }
-    setCategories(categories.filter(c => c.id !== id));
+
+    try {
+      await categoryApi.delete(id);
+      await loadCategories();
+      
+      toast({
+        title: "카테고리 삭제 완료",
+        description: "카테고리가 삭제되었습니다."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "카테고리 삭제 실패",
+        description: error.message || "카테고리 삭제에 실패했습니다."
+      });
+    }
   };
 
-  const rootCategories = categories.filter(c => !c.parentId);
+  if (loading) {
+    return <div className="text-center py-12">로딩 중...</div>;
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[500px]">

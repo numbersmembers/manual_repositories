@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
-import { MOCK_CATEGORIES, MOCK_DOCUMENTS, buildCategoryTree } from "@/lib/mock-data";
 import { Category, Document } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { 
@@ -14,9 +13,7 @@ import {
   FileSpreadsheet,
   FileIcon,
   Eye,
-  Download,
-  Lock,
-  ShieldAlert
+  Download
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,40 +21,82 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { DocumentViewer } from "@/components/documents/document-viewer";
+import { documentApi, categoryApi } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DocumentsPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categoryTree = buildCategoryTree(MOCK_CATEGORIES);
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [docs, cats] = await Promise.all([
+        documentApi.getAll(),
+        categoryApi.getAll()
+      ]);
+      setDocuments(docs);
+      setCategories(cats);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "데이터 로드 실패",
+        description: error.message || "데이터를 불러오는데 실패했습니다."
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const buildCategoryTree = (cats: Category[]): Category[] => {
+    const map = new Map<string, Category & { children?: Category[] }>();
+    const roots: Category[] = [];
+
+    cats.forEach(cat => {
+      map.set(cat.id, { ...cat, children: [] });
+    });
+
+    cats.forEach(cat => {
+      const node = map.get(cat.id)!;
+      if (cat.parentId) {
+        const parent = map.get(cat.parentId);
+        if (parent && parent.children) {
+          parent.children.push(node);
+        }
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return roots;
+  };
+
+  const categoryTree = buildCategoryTree(categories);
 
   // Filter Logic
-  const filteredDocs = MOCK_DOCUMENTS.filter(doc => {
-    // 1. Level Access Check
-    let hasAccess = false;
-    if (user?.level === 3) hasAccess = true;
-    else if (user?.level === 2) hasAccess = doc.securityLevel !== 'secret';
-    else hasAccess = doc.securityLevel === 'general';
-
-    if (!hasAccess) return false;
-
-    // 2. Category Filter
+  const filteredDocs = documents.filter(doc => {
+    // 1. Category Filter
     if (selectedCategoryId) {
-       // Should match category or its children? For simplicity exact match or parent match
-       // Simple implementation: Exact match or match any child of selected
        // Finding all children IDs of selected category
        const getAllChildIds = (id: string): string[] => {
-         const directChildren = MOCK_CATEGORIES.filter(c => c.parentId === id);
+         const directChildren = categories.filter(c => c.parentId === id);
          return [id, ...directChildren.flatMap(c => getAllChildIds(c.id))];
        };
        const relevantIds = getAllChildIds(selectedCategoryId);
        if (!relevantIds.includes(doc.categoryId)) return false;
     }
 
-    // 3. Search Term
+    // 2. Search Term
     if (searchTerm) {
       if (!doc.title.toLowerCase().includes(searchTerm.toLowerCase()) && 
           !doc.authorName.toLowerCase().includes(searchTerm.toLowerCase())) {
@@ -72,6 +111,10 @@ export default function DocumentsPage() {
     setSelectedDoc(doc);
     setViewerOpen(true);
   };
+
+  if (loading) {
+    return <div className="text-center py-12">로딩 중...</div>;
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
@@ -155,7 +198,7 @@ export default function DocumentsPage() {
                              {doc.securityLevel === 'important' && <Badge variant="outline" className="h-4 text-[10px] px-1 py-0 text-orange-600 border-orange-200 bg-orange-50">Important</Badge>}
                              <span className="text-xs text-muted-foreground flex items-center gap-1">
                                <Folder className="w-3 h-3" />
-                               {MOCK_CATEGORIES.find(c => c.id === doc.categoryId)?.path}
+                               {categories.find(c => c.id === doc.categoryId)?.path}
                              </span>
                            </div>
                            <h3 className="font-medium truncate pr-4 text-base group-hover:text-primary transition-colors">
