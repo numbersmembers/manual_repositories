@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Loader2, Lock } from "lucide-react";
 
+import _______ from "@assets/넘버스 파비콘.png";
+
 export default function LoginPage() {
   const { login, isLoading, user } = useAuth();
   const [email, setEmail] = useState("");
@@ -41,7 +43,6 @@ export default function LoginPage() {
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/5 rounded-full blur-[100px]" />
       </div>
-
       <Card className="w-full max-w-md shadow-2xl border-none ring-1 ring-black/5 bg-white/90 backdrop-blur-xl dark:bg-slate-900/90">
         <CardHeader className="space-y-1 text-center pb-8 pt-8">
           <div className="mx-auto w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
@@ -58,7 +59,7 @@ export default function LoginPage() {
               onClick={() => handleQuickLogin('admin')}
               disabled={isLoading}
             >
-              <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" className="w-5 h-5 absolute left-4" alt="Google" />
+              <img src={_______} className="w-5 h-5 absolute left-4" alt="Google" />
               Google 계정으로 로그인
             </Button>
           </div>
