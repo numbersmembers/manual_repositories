@@ -44,7 +44,7 @@ export function AppSidebar() {
           <div className="flex flex-col leading-none">
             <span>Bloter/Numbers</span>
             <span className="text-muted-foreground text-[20px] font-bold">Manual</span>
-            <span className="text-muted-foreground font-light text-xs opacity-70">Repositories</span>
+            <span className="text-muted-foreground opacity-70 text-[20px] font-bold">Repositories</span>
           </div>
         </h1>
       </div>
