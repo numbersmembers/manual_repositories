@@ -41,7 +41,7 @@ export function AppSidebar() {
           <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-black">
             B
           </div>
-          Bloter<span className="text-muted-foreground font-light">/Manual</span>
+          Bloter/Numbers<span className="text-muted-foreground font-light"> Manual</span>
         </h1>
       </div>
 
@@ -118,7 +118,7 @@ export function MobileSidebar() {
                 <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-black">
                   B
                 </div>
-                <h1 className="text-lg font-bold tracking-tight">Bloter/M</h1>
+                <h1 className="text-lg font-bold tracking-tight">Bloter/Numbers M</h1>
              </div>
              {/* Mode Toggle in Mobile Menu */}
              <div className="scale-90 origin-right">
