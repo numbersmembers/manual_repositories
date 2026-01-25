@@ -15,6 +15,13 @@ export async function registerRoutes(
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+    const user = req.user;
+    if (user.status === 'pending') {
+      return res.status(403).json({ message: "Account pending approval. Please wait for admin approval." });
+    }
+    if (user.status === 'banned') {
+      return res.status(403).json({ message: "Account has been banned." });
+    }
     next();
   };
 
@@ -23,6 +30,9 @@ export async function registerRoutes(
       return res.status(401).json({ message: "Unauthorized" });
     }
     const user = req.user;
+    if (user.status !== 'active') {
+      return res.status(403).json({ message: "Account not active" });
+    }
     if (!user || user.level !== 3) {
       return res.status(403).json({ message: "Forbidden: Admin access required" });
     }

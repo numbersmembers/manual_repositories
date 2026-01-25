@@ -51,6 +51,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         
+        if (userData.status === 'pending') {
+          toast({
+            variant: "destructive",
+            title: "승인 대기 중",
+            description: "관리자의 승인을 기다리고 있습니다. 잠시 후 다시 시도해주세요."
+          });
+          window.location.href = '/api/logout';
+          return;
+        }
+        
         setUser({
           id: userData.id,
           email: userData.email,

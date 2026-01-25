@@ -21,7 +21,7 @@ export interface User {
   level: UserLevel;
   avatarUrl?: string;
   isAdmin?: boolean;
-  status: 'active' | 'banned';
+  status: 'active' | 'banned' | 'pending';
 }
 
 export interface Category {

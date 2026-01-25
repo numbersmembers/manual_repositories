@@ -82,7 +82,7 @@ class PostgresAuthStorage implements IAuthStorage {
         avatarUrl: userData.profileImageUrl,
         level: 1,
         isAdmin: 0,
-        status: 'active',
+        status: 'pending',
       })
       .returning();
     return user;
@@ -195,7 +195,7 @@ class SupabaseAuthStorage implements IAuthStorage {
         avatar_url: userData.profileImageUrl,
         level: 1,
         is_admin: 0,
-        status: 'active',
+        status: 'pending',
       })
       .select()
       .single();

@@ -77,6 +77,23 @@ export default function AdminPage() {
     }
   };
 
+  const handleApproveUser = async (userId: string) => {
+    try {
+      await userApi.updateStatus(userId, 'active');
+      await loadData();
+      toast({
+        title: "사용자 승인 완료",
+        description: "사용자가 승인되어 이제 로그인할 수 있습니다."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "승인 실패",
+        description: error.message || "사용자 승인에 실패했습니다."
+      });
+    }
+  };
+
   const handleBanUser = async (userId: string) => {
     if (!confirm("정말로 이 사용자를 강퇴하시겠습니까?")) {
       return;
@@ -196,11 +213,23 @@ export default function AdminPage() {
                       <TableCell>
                         {u.status === 'active' ? (
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">정상</Badge>
+                        ) : u.status === 'pending' ? (
+                          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">승인 대기</Badge>
                         ) : (
                           <Badge variant="destructive">차단됨</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right flex gap-2 justify-end">
+                        {u.status === 'pending' && (
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => handleApproveUser(u.id)}
+                          >
+                            승인
+                          </Button>
+                        )}
                         <Button 
                           variant="destructive" 
                           size="sm"
