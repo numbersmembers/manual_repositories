@@ -2,8 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
-import session from "express-session";
 import { seedDatabase } from "./seed";
+import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 
 const app = express();
 const httpServer = createServer(app);
@@ -24,27 +24,6 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
-
-// Session middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "bloter-numbers-secret-key-change-in-production",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    },
-  })
-);
-
-// Extend session type
-declare module "express-session" {
-  interface SessionData {
-    userId?: string;
-  }
-}
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -84,6 +63,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Setup Replit Auth (must be before other routes)
+  await setupAuth(app);
+  registerAuthRoutes(app);
+  
   // Seed database with initial data
   await seedDatabase();
   

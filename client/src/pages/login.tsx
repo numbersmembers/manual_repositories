@@ -1,23 +1,31 @@
 import { useAuth } from "@/context/auth-context";
-import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Lock } from "lucide-react";
-
-import _______ from "@assets/넘버스 파비콘.png";
+import { useEffect } from "react";
+import { useLocation } from "wouter";
 
 export default function LoginPage() {
-  const { login, isLoading, user } = useAuth();
+  const { isLoading, user } = useAuth();
   const [, setLocation] = useLocation();
 
-  if (user) {
-    setLocation("/");
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
 
   const handleGoogleLogin = () => {
-    login('mrmoon@numbers.co.kr');
+    window.location.href = "/api/login";
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-4 relative overflow-hidden">
@@ -39,19 +47,10 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="pb-8">
           <Button 
-            variant="outline" 
-            className="btn-3d w-full h-12 relative font-medium text-base"
+            className="btn-3d w-full h-12 font-medium text-base"
             onClick={handleGoogleLogin}
-            disabled={isLoading}
           >
-            {isLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                <img src={_______} className="w-5 h-5 absolute left-4" alt="Google" />
-                Google 계정으로 로그인
-              </>
-            )}
+            Google 계정으로 로그인
           </Button>
         </CardContent>
         <CardFooter className="flex justify-center text-xs text-muted-foreground pb-8">
