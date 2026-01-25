@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertDocumentSchema, insertCategorySchema } from "@shared/schema";
+import { insertDocumentSchema, insertCategorySchema, insertCommentSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(
@@ -274,6 +274,63 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Delete document error:", error);
       res.status(500).json({ message: "Failed to delete document" });
+    }
+  });
+
+  // Comment routes
+  app.get("/api/documents/:documentId/comments", requireAuth, async (req, res) => {
+    try {
+      const comments = await storage.getCommentsByDocument(req.params.documentId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Get comments error:", error);
+      res.status(500).json({ message: "Failed to get comments" });
+    }
+  });
+
+  app.post("/api/documents/:documentId/comments", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const parsed = insertCommentSchema.safeParse({
+        documentId: req.params.documentId,
+        authorId: user.id,
+        authorName: user.name,
+        content: req.body.content
+      });
+
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid comment data", errors: parsed.error });
+      }
+
+      const comment = await storage.createComment(parsed.data);
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error("Create comment error:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  app.delete("/api/comments/:id", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Only admin can delete comments for now
+      if (user.level !== 3) {
+        return res.status(403).json({ message: "Only admin can delete comments" });
+      }
+
+      await storage.deleteComment(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Delete comment error:", error);
+      res.status(500).json({ message: "Failed to delete comment" });
     }
   });
 
