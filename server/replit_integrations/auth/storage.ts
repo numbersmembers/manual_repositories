@@ -2,6 +2,12 @@ import { users, loginLogs, type LoginLog, type User } from "@shared/schema";
 import { db } from "../../db";
 import { supabase } from "../../supabase";
 import { eq, desc } from "drizzle-orm";
+import { createHash } from "crypto";
+
+function googleIdToUuid(googleId: string): string {
+  const hash = createHash('sha256').update(`google:${googleId}`).digest('hex');
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-4${hash.slice(13, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+}
 
 export type { User };
 export type UpsertUser = {
@@ -121,10 +127,11 @@ class SupabaseAuthStorage implements IAuthStorage {
   }
 
   async getUser(id: string): Promise<User | undefined> {
+    const uuid = id.includes('-') ? id : googleIdToUuid(id);
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .eq('id', id)
+      .eq('id', uuid)
       .single();
     
     if (error || !data) return undefined;
@@ -134,6 +141,7 @@ class SupabaseAuthStorage implements IAuthStorage {
   async upsertUser(userData: UpsertUser): Promise<User> {
     const name = [userData.firstName, userData.lastName].filter(Boolean).join(' ') || 'User';
     const email = userData.email || '';
+    const uuid = googleIdToUuid(userData.id);
     
     const { data: existingByEmail } = await supabase
       .from('users')
@@ -159,7 +167,7 @@ class SupabaseAuthStorage implements IAuthStorage {
     const { data: existingById } = await supabase
       .from('users')
       .select('*')
-      .eq('id', userData.id)
+      .eq('id', uuid)
       .single();
     
     if (existingById) {
@@ -170,7 +178,7 @@ class SupabaseAuthStorage implements IAuthStorage {
           name: name,
           avatar_url: userData.profileImageUrl,
         })
-        .eq('id', userData.id)
+        .eq('id', uuid)
         .select()
         .single();
       
@@ -181,7 +189,7 @@ class SupabaseAuthStorage implements IAuthStorage {
     const { data: user, error } = await supabase
       .from('users')
       .insert({
-        id: userData.id,
+        id: uuid,
         email: email,
         name: name,
         avatar_url: userData.profileImageUrl,
