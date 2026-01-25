@@ -91,6 +91,15 @@ export default function UploadPage() {
     }
   };
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
   const handleUpload = async () => {
     if (!file || !title || !categoryId) {
       toast({
@@ -110,13 +119,16 @@ export default function UploadPage() {
         ? `${fileSizeKB} KB` 
         : `${(file.size / 1024 / 1024).toFixed(2)} MB`;
 
+      const fileData = await fileToBase64(file);
+
       await documentApi.create({
         title,
         type: fileType,
         securityLevel,
         categoryId,
-        url: '#', // In a real app, this would be the uploaded file URL
-        size: fileSize
+        url: file.name,
+        size: fileSize,
+        fileData
       });
 
       toast({

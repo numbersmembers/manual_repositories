@@ -5,16 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, FileSpreadsheet, FileIcon, Lock, ShieldAlert, Folder, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Document, Category } from "@/lib/types";
-import { DocumentViewer } from "@/components/documents/document-viewer";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { documentApi, categoryApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
-  const [viewerOpen, setViewerOpen] = useState(false);
+  const [, setLocation] = useLocation();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +45,7 @@ export default function Dashboard() {
     .slice(0, 4);
 
   const handleOpenDoc = (doc: Document) => {
-    setSelectedDoc(doc);
-    setViewerOpen(true);
+    setLocation(`/documents/${doc.id}`);
   };
 
   if (loading) {
@@ -154,11 +151,6 @@ export default function Dashboard() {
         </section>
       </div>
 
-      <DocumentViewer 
-        document={selectedDoc} 
-        open={viewerOpen} 
-        onOpenChange={setViewerOpen} 
-      />
     </div>
   );
 }

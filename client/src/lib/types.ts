@@ -39,6 +39,7 @@ export interface Document {
   securityLevel: SecurityLevel;
   categoryId: string;
   url: string;
+  fileData?: string;
   createdAt: string;
   authorId: string;
   authorName: string;

@@ -140,6 +140,7 @@ export const documentApi = {
       securityLevel: d.securityLevel as any,
       categoryId: d.categoryId,
       url: d.url,
+      fileData: d.fileData,
       authorId: d.authorId,
       authorName: d.authorName,
       createdAt: d.createdAt,
@@ -154,6 +155,7 @@ export const documentApi = {
     categoryId: string;
     url?: string;
     size?: string;
+    fileData?: string;
   }): Promise<Document> {
     const created = await apiRequest<any>('/documents', {
       method: 'POST',
@@ -166,6 +168,7 @@ export const documentApi = {
       securityLevel: created.securityLevel as any,
       categoryId: created.categoryId,
       url: created.url,
+      fileData: created.fileData,
       authorId: created.authorId,
       authorName: created.authorName,
       createdAt: created.createdAt,

@@ -25,18 +25,32 @@ function getSecurityBadge(level: string) {
   }
 }
 
+function getFileExtension(type: string, originalUrl?: string): string {
+  if (originalUrl && originalUrl !== '#') {
+    const ext = originalUrl.split('.').pop();
+    if (ext) return `.${ext}`;
+  }
+  switch (type) {
+    case 'pdf': return '.pdf';
+    case 'excel': return '.xlsx';
+    case 'ms_word': return '.docx';
+    case 'hwp': return '.hwp';
+    case 'image': return '.png';
+    case 'text': return '.txt';
+    default: return '';
+  }
+}
+
 function handleDownload(doc: Document) {
-  if (doc.url && doc.url !== '#') {
-    window.open(doc.url, '_blank');
+  if (doc.fileData) {
+    const link = document.createElement('a');
+    link.href = doc.fileData;
+    link.download = doc.url && doc.url !== '#' ? doc.url : `${doc.title}${getFileExtension(doc.type, doc.url)}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   } else {
-    const element = document.createElement('a');
-    const content = `문서 제목: ${doc.title}\n작성자: ${doc.authorName}\n등록일: ${new Date(doc.createdAt).toLocaleDateString('ko-KR')}\n파일 형식: ${doc.type}\n\n(실제 파일 콘텐츠는 별도 저장소에서 관리됩니다)`;
-    const file = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    element.href = URL.createObjectURL(file);
-    element.download = `${doc.title}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    alert('이 문서는 파일 데이터가 저장되지 않았습니다. 새로 업로드된 문서만 다운로드가 가능합니다.');
   }
 }
 
