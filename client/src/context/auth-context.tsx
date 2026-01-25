@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import PendingApproval from '@/pages/pending-approval';
 
 interface AuthContextType {
   user: User | null;
@@ -14,6 +15,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [pendingUser, setPendingUser] = useState<{name: string, email: string} | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -29,12 +31,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (!response.ok) {
         setUser(null);
+        setPendingUser(null);
         return;
       }
       
       const text = await response.text();
       if (!text) {
         setUser(null);
+        setPendingUser(null);
         return;
       }
       
@@ -52,15 +56,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         if (userData.status === 'pending') {
-          toast({
-            variant: "destructive",
-            title: "승인 대기 중",
-            description: "관리자의 승인을 기다리고 있습니다. 잠시 후 다시 시도해주세요."
+          setPendingUser({
+            name: userData.name,
+            email: userData.email
           });
-          window.location.href = '/api/logout';
+          setUser(null);
           return;
         }
         
+        setPendingUser(null);
         setUser({
           id: userData.id,
           email: userData.email,
@@ -90,6 +94,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return false;
     return user.level >= requiredLevel;
   };
+
+  const handleApproved = () => {
+    setPendingUser(null);
+    checkSession();
+    toast({
+      title: "승인 완료",
+      description: "관리자가 계정을 승인했습니다. 환영합니다!"
+    });
+  };
+
+  if (pendingUser) {
+    return (
+      <PendingApproval 
+        userName={pendingUser.name}
+        userEmail={pendingUser.email}
+        onApproved={handleApproved}
+        onLogout={logout}
+      />
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isLoading, checkAccess }}>
