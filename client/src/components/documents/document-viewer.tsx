@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Document } from "@/lib/types";
@@ -19,24 +19,39 @@ function getDocumentIcon(type: string) {
   }
 }
 
-export function DocumentViewer({ document, open, onOpenChange }: DocumentViewerProps) {
-  if (!document) return null;
+function handleDownload(doc: Document) {
+  if (doc.url && doc.url !== '#') {
+    window.open(doc.url, '_blank');
+  } else {
+    const element = document.createElement('a');
+    const content = `문서 제목: ${doc.title}\n작성자: ${doc.authorName}\n등록일: ${new Date(doc.createdAt).toLocaleDateString('ko-KR')}\n파일 형식: ${doc.type}\n\n(실제 파일 콘텐츠는 별도 저장소에서 관리됩니다)`;
+    const file = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    element.href = URL.createObjectURL(file);
+    element.download = `${doc.title}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  }
+}
+
+export function DocumentViewer({ document: doc, open, onOpenChange }: DocumentViewerProps) {
+  if (!doc) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0 gap-0 overflow-hidden [&>button]:hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b bg-slate-50 dark:bg-slate-900/50">
           <div className="flex items-center gap-3">
              <div className="p-2 bg-white dark:bg-slate-800 rounded border">
-                {getDocumentIcon(document.type)}
+                {getDocumentIcon(doc.type)}
              </div>
              <div>
                <DialogTitle className="text-base font-semibold flex items-center gap-2">
-                 {document.title}
-                 {document.securityLevel === 'secret' && <Badge variant="destructive" className="h-5 text-[10px]">Secret</Badge>}
+                 {doc.title}
+                 {doc.securityLevel === 'secret' && <Badge variant="destructive" className="h-5 text-[10px]">Secret</Badge>}
                </DialogTitle>
                <DialogDescription className="text-xs mt-0.5">
-                 {document.authorName} • {new Date(document.createdAt).toLocaleDateString()} • {document.size}
+                 {doc.authorName} • {new Date(doc.createdAt).toLocaleDateString()} • {doc.size}
                </DialogDescription>
              </div>
           </div>
@@ -47,19 +62,25 @@ export function DocumentViewer({ document, open, onOpenChange }: DocumentViewerP
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <Share2 className="w-4 h-4" />
             </Button>
-            <Button size="sm" className="h-8 gap-2 ml-2">
+            <Button 
+              size="sm" 
+              className="h-8 gap-2 ml-2"
+              onClick={() => handleDownload(doc)}
+              data-testid="button-download"
+            >
               <Download className="w-3.5 h-3.5" />
               다운로드
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 ml-2"
-              onClick={() => onOpenChange(false)}
-              data-testid="button-close-preview"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <DialogClose asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 ml-2"
+                data-testid="button-close-preview"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </DialogClose>
           </div>
         </div>
         
@@ -68,21 +89,21 @@ export function DocumentViewer({ document, open, onOpenChange }: DocumentViewerP
               <div className="max-w-2xl mx-auto">
                 <div className="text-center space-y-6">
                   <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-lg inline-block">
-                    {getDocumentIcon(document.type)}
-                    <div className="mt-2 text-sm font-medium">{document.type.toUpperCase()}</div>
+                    {getDocumentIcon(doc.type)}
+                    <div className="mt-2 text-sm font-medium">{doc.type.toUpperCase()}</div>
                   </div>
                   
                   <div className="space-y-2">
-                    <h3 className="text-xl font-semibold">{document.title}</h3>
+                    <h3 className="text-xl font-semibold">{doc.title}</h3>
                     <p className="text-muted-foreground text-sm">
-                      작성자: {document.authorName}
+                      작성자: {doc.authorName}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      등록일: {new Date(document.createdAt).toLocaleDateString('ko-KR')}
+                      등록일: {new Date(doc.createdAt).toLocaleDateString('ko-KR')}
                     </p>
-                    {document.size && (
+                    {doc.size && (
                       <p className="text-muted-foreground text-sm">
-                        파일 크기: {document.size}
+                        파일 크기: {doc.size}
                       </p>
                     )}
                   </div>
