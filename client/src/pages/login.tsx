@@ -34,7 +34,6 @@ export default function LoginPage() {
         <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-indigo-500/10 rounded-full blur-[120px]" />
         <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[80px]" />
       </div>
-      
       <Card className="card-3d w-full max-w-md border-none bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
         <CardHeader className="space-y-1 text-center pb-8 pt-10">
           <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center mb-5 shadow-xl shadow-primary/30 transform hover:scale-105 transition-transform duration-300 overflow-hidden">
@@ -43,7 +42,7 @@ export default function LoginPage() {
           <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
             Bloter/Numbers
           </CardTitle>
-          <CardDescription className="text-base">업무 매뉴얼 및 문서 관리 시스템</CardDescription>
+          <CardDescription className="text-base">업무 매뉴얼 등 필요 문서 박스</CardDescription>
         </CardHeader>
         <CardContent className="pb-8">
           <Button 
