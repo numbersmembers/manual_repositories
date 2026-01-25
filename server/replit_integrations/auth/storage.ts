@@ -1,8 +1,9 @@
-import { users, loginLogs, type LoginLog } from "@shared/schema";
+import { users, loginLogs, type LoginLog, type User } from "@shared/schema";
 import { db } from "../../db";
+import { supabase } from "../../supabase";
 import { eq, desc } from "drizzle-orm";
 
-export type User = typeof users.$inferSelect;
+export type { User };
 export type UpsertUser = {
   id: string;
   email?: string | null;
@@ -27,7 +28,9 @@ export interface IAuthStorage {
   getLoginLogs(limit?: number): Promise<LoginLog[]>;
 }
 
-class AuthStorage implements IAuthStorage {
+const useSupabase = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
+
+class PostgresAuthStorage implements IAuthStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -37,10 +40,8 @@ class AuthStorage implements IAuthStorage {
     const name = [userData.firstName, userData.lastName].filter(Boolean).join(' ') || 'User';
     const email = userData.email || '';
     
-    // First check if user exists by email (since email is unique)
     const [existingByEmail] = await db.select().from(users).where(eq(users.email, email));
     if (existingByEmail) {
-      // Update existing user and return
       const [updated] = await db
         .update(users)
         .set({
@@ -52,10 +53,8 @@ class AuthStorage implements IAuthStorage {
       return updated;
     }
     
-    // Check if user exists by ID
     const [existingById] = await db.select().from(users).where(eq(users.id, userData.id));
     if (existingById) {
-      // Update existing user by ID
       const [updated] = await db
         .update(users)
         .set({
@@ -68,7 +67,6 @@ class AuthStorage implements IAuthStorage {
       return updated;
     }
     
-    // Insert new user
     const [user] = await db
       .insert(users)
       .values({
@@ -108,4 +106,152 @@ class AuthStorage implements IAuthStorage {
   }
 }
 
-export const authStorage = new AuthStorage();
+class SupabaseAuthStorage implements IAuthStorage {
+  private mapUser(data: any): User {
+    return {
+      id: data.id,
+      email: data.email,
+      name: data.name,
+      level: data.level,
+      isAdmin: data.is_admin,
+      status: data.status,
+      avatarUrl: data.avatar_url,
+      createdAt: new Date(data.created_at)
+    };
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return this.mapUser(data);
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const name = [userData.firstName, userData.lastName].filter(Boolean).join(' ') || 'User';
+    const email = userData.email || '';
+    
+    const { data: existingByEmail } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+    
+    if (existingByEmail) {
+      const { data: updated, error } = await supabase
+        .from('users')
+        .update({
+          name: name,
+          avatar_url: userData.profileImageUrl,
+        })
+        .eq('email', email)
+        .select()
+        .single();
+      
+      if (error) throw new Error(`Failed to update user: ${error.message}`);
+      return this.mapUser(updated);
+    }
+    
+    const { data: existingById } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userData.id)
+      .single();
+    
+    if (existingById) {
+      const { data: updated, error } = await supabase
+        .from('users')
+        .update({
+          email: email,
+          name: name,
+          avatar_url: userData.profileImageUrl,
+        })
+        .eq('id', userData.id)
+        .select()
+        .single();
+      
+      if (error) throw new Error(`Failed to update user: ${error.message}`);
+      return this.mapUser(updated);
+    }
+    
+    const { data: user, error } = await supabase
+      .from('users')
+      .insert({
+        id: userData.id,
+        email: email,
+        name: name,
+        avatar_url: userData.profileImageUrl,
+        level: 1,
+        is_admin: 0,
+        status: 'active',
+      })
+      .select()
+      .single();
+    
+    if (error) throw new Error(`Failed to create user: ${error.message}`);
+    return this.mapUser(user);
+  }
+
+  async createLoginLog(log: CreateLoginLog): Promise<LoginLog> {
+    const { data, error } = await supabase
+      .from('login_logs')
+      .insert({
+        user_id: log.userId,
+        user_email: log.userEmail,
+        user_name: log.userName,
+        action: log.action,
+        ip_address: log.ipAddress,
+        user_agent: log.userAgent,
+      })
+      .select()
+      .single();
+    
+    if (error) throw new Error(`Failed to create login log: ${error.message}`);
+    return {
+      id: data.id,
+      userId: data.user_id,
+      userEmail: data.user_email,
+      userName: data.user_name,
+      action: data.action,
+      ipAddress: data.ip_address,
+      userAgent: data.user_agent,
+      createdAt: new Date(data.created_at)
+    };
+  }
+
+  async getLoginLogs(limit: number = 100): Promise<LoginLog[]> {
+    const { data, error } = await supabase
+      .from('login_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error || !data) return [];
+    return data.map((log: any) => ({
+      id: log.id,
+      userId: log.user_id,
+      userEmail: log.user_email,
+      userName: log.user_name,
+      action: log.action,
+      ipAddress: log.ip_address,
+      userAgent: log.user_agent,
+      createdAt: new Date(log.created_at)
+    }));
+  }
+}
+
+function createAuthStorage(): IAuthStorage {
+  if (useSupabase) {
+    console.log('Auth storage: Using Supabase');
+    return new SupabaseAuthStorage();
+  } else {
+    console.log('Auth storage: Using PostgreSQL');
+    return new PostgresAuthStorage();
+  }
+}
+
+export const authStorage = createAuthStorage();
