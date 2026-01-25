@@ -79,7 +79,7 @@ export const categoryApi = {
     return categories.map(c => ({
       id: c.id,
       name: c.name,
-      parentId: c.parentId || undefined,
+      parentId: c.parentId ?? null,
       path: c.path
     }));
   },
@@ -89,14 +89,14 @@ export const categoryApi = {
       method: 'POST',
       body: JSON.stringify({
         name: category.name,
-        parentId: category.parentId || null,
+        parentId: category.parentId ?? null,
         path: category.path
       }),
     });
     return {
       id: created.id,
       name: created.name,
-      parentId: created.parentId || undefined,
+      parentId: created.parentId ?? null,
       path: created.path
     };
   },
