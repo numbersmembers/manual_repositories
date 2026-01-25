@@ -33,6 +33,8 @@ export interface IStorage {
   deleteDocument(id: string): Promise<void>;
 }
 
+import { supabaseStorage } from "./storage-supabase";
+
 // Check if Supabase credentials are available
 const useSupabase = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
 
@@ -40,7 +42,6 @@ const useSupabase = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY
 function createStorage(): IStorage {
   if (useSupabase) {
     console.log('Using Supabase database');
-    const { supabaseStorage } = require('./storage-supabase');
     return supabaseStorage;
   } else {
     console.log('Using Replit PostgreSQL database');
