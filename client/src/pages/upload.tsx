@@ -179,7 +179,7 @@ export default function UploadPage() {
         <p className="text-muted-foreground">새로운 업무 문서를 등록합니다.</p>
       </div>
 
-      <Card>
+      <Card className="card-3d">
         <CardHeader>
           <CardTitle>문서 정보 입력</CardTitle>
           <CardDescription>

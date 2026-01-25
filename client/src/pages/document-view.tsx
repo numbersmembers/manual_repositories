@@ -138,7 +138,7 @@ export default function DocumentViewPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="card-3d">
         <CardContent className="p-8">
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-shrink-0">
@@ -183,7 +183,7 @@ export default function DocumentViewPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="card-3d">
         <CardContent className="p-8">
           <div className="min-h-[400px] flex items-center justify-center border-2 border-dashed rounded-lg bg-slate-50 dark:bg-slate-900">
             <div className="text-center text-muted-foreground">

@@ -62,7 +62,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-none text-white shadow-lg">
+        <Card className="card-3d bg-gradient-to-br from-blue-500 to-blue-600 border-none text-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-blue-100">총 접근 가능 문서</CardTitle>
           </CardHeader>
@@ -72,7 +72,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="card-3d">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">최근 업로드</CardTitle>
           </CardHeader>
@@ -82,7 +82,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-3d">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">내 문서</CardTitle>
           </CardHeader>
@@ -139,7 +139,7 @@ function DocumentCard({ doc, onClick }: { doc: Document, onClick: () => void }) 
 
   return (
     <div 
-      className="flex items-center p-3 rounded-lg border bg-card hover:shadow-md transition-all group cursor-pointer"
+      className="card-3d flex items-center p-3 rounded-lg border bg-card transition-all group cursor-pointer"
       onClick={onClick}
     >
       <div className="mr-4 p-2 bg-slate-50 dark:bg-slate-900 rounded border">

@@ -35,7 +35,7 @@ export function AppSidebar() {
   }
 
   return (
-    <div className="flex h-screen bg-card border-r w-64 flex-col hidden md:flex transition-colors">
+    <div className="flex h-screen bg-card border-r w-64 flex-col hidden md:flex transition-colors shadow-xl">
       <div className="p-6 border-b">
         <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
           <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-black shrink-0">

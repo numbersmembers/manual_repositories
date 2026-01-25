@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/context/auth-context";
 import { Category, Document } from "@/lib/types";
@@ -127,8 +127,8 @@ export default function DocumentsPage() {
     return <div className="text-center py-12 text-xs">로딩 중...</div>;
   }
 
-  const renderCategoryRows = (nodes: (Category & { children?: Category[] })[], level: number = 0): JSX.Element[] => {
-    const rows: JSX.Element[] = [];
+  const renderCategoryRows = (nodes: (Category & { children?: Category[] })[], level: number = 0): React.ReactElement[] => {
+    const rows: React.ReactElement[] = [];
     
     nodes.forEach(node => {
       const hasChildren = node.children && node.children.length > 0;
@@ -225,7 +225,7 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto border rounded">
+      <div className="flex-1 overflow-auto border rounded table-3d bg-card">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-100 dark:bg-slate-800">

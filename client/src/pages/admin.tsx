@@ -138,7 +138,7 @@ export default function AdminPage() {
         </TabsList>
 
         <TabsContent value="users">
-          <Card>
+          <Card className="card-3d">
             <CardHeader>
               <CardTitle>사용자 목록</CardTitle>
               <CardDescription>
@@ -215,7 +215,7 @@ export default function AdminPage() {
         </TabsContent>
 
         <TabsContent value="documents">
-          <Card>
+          <Card className="card-3d">
             <CardHeader>
               <CardTitle>문서 관리</CardTitle>
               <CardDescription>
@@ -275,7 +275,7 @@ export default function AdminPage() {
         </TabsContent>
 
         <TabsContent value="categories">
-          <Card>
+          <Card className="card-3d">
             <CardHeader>
               <CardTitle>카테고리 구조 관리</CardTitle>
               <CardDescription>

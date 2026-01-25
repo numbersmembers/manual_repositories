@@ -154,6 +154,78 @@
   @apply bg-black/40 backdrop-blur-md border border-white/10 shadow-sm;
 }
 
+/* 3D Card Effect */
+.card-3d {
+  box-shadow: 
+    0 1px 1px hsl(0deg 0% 0% / 0.03),
+    0 2px 2px hsl(0deg 0% 0% / 0.03),
+    0 4px 4px hsl(0deg 0% 0% / 0.03),
+    0 8px 8px hsl(0deg 0% 0% / 0.03),
+    0 16px 16px hsl(0deg 0% 0% / 0.03),
+    0 32px 32px hsl(0deg 0% 0% / 0.03);
+  transform: perspective(1000px) rotateX(0deg);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-3d:hover {
+  box-shadow: 
+    0 2px 2px hsl(0deg 0% 0% / 0.04),
+    0 4px 4px hsl(0deg 0% 0% / 0.04),
+    0 8px 8px hsl(0deg 0% 0% / 0.04),
+    0 16px 16px hsl(0deg 0% 0% / 0.04),
+    0 32px 32px hsl(0deg 0% 0% / 0.04),
+    0 48px 48px hsl(0deg 0% 0% / 0.04);
+  transform: perspective(1000px) translateY(-4px);
+}
+
+/* 3D Button Effect */
+.btn-3d {
+  box-shadow: 
+    0 4px 6px -1px hsl(0deg 0% 0% / 0.1),
+    0 2px 4px -2px hsl(0deg 0% 0% / 0.1),
+    inset 0 1px 0 hsl(0deg 0% 100% / 0.1);
+  transform: perspective(500px) translateZ(0);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-3d:hover {
+  box-shadow: 
+    0 10px 15px -3px hsl(0deg 0% 0% / 0.1),
+    0 4px 6px -4px hsl(0deg 0% 0% / 0.1),
+    inset 0 1px 0 hsl(0deg 0% 100% / 0.15);
+  transform: perspective(500px) translateY(-2px) translateZ(4px);
+}
+.btn-3d:active {
+  box-shadow: 
+    0 2px 4px -1px hsl(0deg 0% 0% / 0.1),
+    0 1px 2px -1px hsl(0deg 0% 0% / 0.1),
+    inset 0 2px 4px hsl(0deg 0% 0% / 0.05);
+  transform: perspective(500px) translateY(1px) translateZ(0);
+}
+
+/* 3D Table Effect */
+.table-3d {
+  box-shadow: 
+    0 1px 2px hsl(0deg 0% 0% / 0.04),
+    0 2px 4px hsl(0deg 0% 0% / 0.04),
+    0 4px 8px hsl(0deg 0% 0% / 0.04),
+    0 8px 16px hsl(0deg 0% 0% / 0.04);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* 3D Panel/Section Effect */
+.panel-3d {
+  box-shadow: 
+    0 1px 3px hsl(0deg 0% 0% / 0.05),
+    0 4px 6px hsl(0deg 0% 0% / 0.05),
+    0 8px 12px hsl(0deg 0% 0% / 0.05);
+  border: 1px solid hsl(0deg 0% 0% / 0.05);
+  background: linear-gradient(to bottom, hsl(0deg 0% 100% / 0.8), hsl(0deg 0% 100% / 0.6));
+}
+.dark .panel-3d {
+  background: linear-gradient(to bottom, hsl(0deg 0% 20% / 0.8), hsl(0deg 0% 15% / 0.6));
+  border: 1px solid hsl(0deg 0% 100% / 0.05);
+}
+
 /* Custom Animations */
 @keyframes slide-up-fade {
   from { opacity: 0; transform: translateY(10px); }
