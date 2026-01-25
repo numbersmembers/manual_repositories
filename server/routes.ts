@@ -10,82 +10,33 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
-  // Authentication middleware
+  // Authentication middleware (works with Passport/Google OAuth)
   const requireAuth = (req: any, res: any, next: any) => {
-    if (!req.session.userId) {
+    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     next();
   };
 
   const requireAdmin = async (req: any, res: any, next: any) => {
-    if (!req.session.userId) {
+    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const user = await storage.getUser(req.session.userId);
+    const user = req.user;
     if (!user || user.level !== 3) {
       return res.status(403).json({ message: "Forbidden: Admin access required" });
     }
     next();
   };
 
-  // Authentication routes
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { email } = req.body;
-      if (!email) {
-        return res.status(400).json({ message: "Email is required" });
-      }
-
-      const user = await storage.getUserByEmail(email);
-      
-      if (!user) {
-        // Create new user with level 1 for demo purposes
-        const newUser = await storage.createUser({
-          email,
-          name: email.split('@')[0],
-          level: 1,
-          isAdmin: 0,
-          status: 'active',
-          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
-        });
-        req.session.userId = newUser.id;
-        return res.json(newUser);
-      }
-
-      if (user.status === 'banned') {
-        return res.status(403).json({ message: "Account has been banned" });
-      }
-
-      req.session.userId = user.id;
-      res.json(user);
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Login failed" });
-    }
-  });
-
-  app.post("/api/auth/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ message: "Logout failed" });
-      }
-      res.json({ message: "Logged out successfully" });
-    });
-  });
-
-  app.get("/api/auth/me", async (req, res) => {
-    if (!req.session.userId) {
+  // Authentication route (for client session check - Google OAuth handles actual login/logout)
+  app.get("/api/auth/me", async (req: any, res) => {
+    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
     try {
-      const user = await storage.getUser(req.session.userId);
-      if (!user) {
-        req.session.destroy(() => {});
-        return res.status(404).json({ message: "User not found" });
-      }
-      res.json(user);
+      res.json(req.user);
     } catch (error) {
       console.error("Get user error:", error);
       res.status(500).json({ message: "Failed to get user" });
@@ -192,7 +143,7 @@ export async function registerRoutes(
   // Document routes
   app.get("/api/documents", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser(req.session.userId!);
+      const user = await storage.getUser((req as any).user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -215,7 +166,7 @@ export async function registerRoutes(
 
   app.get("/api/documents/:id", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser(req.session.userId!);
+      const user = await storage.getUser((req as any).user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -242,7 +193,7 @@ export async function registerRoutes(
 
   app.post("/api/documents", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser(req.session.userId!);
+      const user = await storage.getUser((req as any).user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -267,7 +218,7 @@ export async function registerRoutes(
 
   app.delete("/api/documents/:id", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser(req.session.userId!);
+      const user = await storage.getUser((req as any).user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -293,7 +244,7 @@ export async function registerRoutes(
   // Comment routes
   app.get("/api/documents/:documentId/comments", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser(req.session.userId!);
+      const user = await storage.getUser((req as any).user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -320,7 +271,7 @@ export async function registerRoutes(
 
   app.post("/api/documents/:documentId/comments", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser(req.session.userId!);
+      const user = await storage.getUser((req as any).user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -358,7 +309,7 @@ export async function registerRoutes(
 
   app.delete("/api/comments/:id", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser(req.session.userId!);
+      const user = await storage.getUser((req as any).user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
