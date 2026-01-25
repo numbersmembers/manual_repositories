@@ -5,41 +5,48 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Ban, ShieldCheck } from "lucide-react";
+import { ShieldCheck, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { User } from "@/lib/types";
+import { User, Document, Category } from "@/lib/types";
 import { CategoryManager } from "@/components/admin/category-manager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { userApi } from "@/lib/api";
+import { userApi, documentApi, categoryApi } from "@/lib/api";
 
 export default function AdminPage() {
   const { user, checkAccess } = useAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (checkAccess(3)) {
-      loadUsers();
+      loadData();
     }
   }, []);
 
-  const loadUsers = async () => {
+  const loadData = async () => {
     try {
-      const data = await userApi.getAll();
-      setUsers(data);
+      const [usersData, docsData, catsData] = await Promise.all([
+        userApi.getAll(),
+        documentApi.getAll(),
+        categoryApi.getAll()
+      ]);
+      setUsers(usersData);
+      setDocuments(docsData);
+      setCategories(catsData);
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "사용자 로드 실패",
-        description: error.message || "사용자 목록을 불러오는데 실패했습니다."
+        title: "데이터 로드 실패",
+        description: error.message || "데이터를 불러오는데 실패했습니다."
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // Security Check
   if (!checkAccess(3)) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-8">
@@ -53,7 +60,7 @@ export default function AdminPage() {
   const handleLevelChange = async (userId: string, newLevel: 1 | 2 | 3) => {
     try {
       await userApi.updateLevel(userId, newLevel);
-      await loadUsers();
+      await loadData();
       toast({
         title: "권한 변경 완료",
         description: "사용자의 레벨이 업데이트되었습니다."
@@ -68,13 +75,13 @@ export default function AdminPage() {
   };
 
   const handleBanUser = async (userId: string) => {
-    if (!confirm("정말로 이 사용자를 강퇴하시겠습니까? 모든 접근 기록이 삭제됩니다.")) {
+    if (!confirm("정말로 이 사용자를 강퇴하시겠습니까?")) {
       return;
     }
 
     try {
       await userApi.updateStatus(userId, 'banned');
-      await loadUsers();
+      await loadData();
       toast({
         variant: "destructive",
         title: "사용자 강퇴 처리",
@@ -85,6 +92,27 @@ export default function AdminPage() {
         variant: "destructive",
         title: "강퇴 처리 실패",
         description: error.message || "사용자 강퇴에 실패했습니다."
+      });
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string, docTitle: string) => {
+    if (!confirm(`"${docTitle}" 문서를 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      await documentApi.delete(docId);
+      await loadData();
+      toast({
+        title: "문서 삭제 완료",
+        description: "문서가 삭제되었습니다."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "문서 삭제 실패",
+        description: error.message || "문서 삭제에 실패했습니다."
       });
     }
   };
@@ -105,6 +133,7 @@ export default function AdminPage() {
       <Tabs defaultValue="users" className="space-y-4">
         <TabsList>
           <TabsTrigger value="users">사용자 관리</TabsTrigger>
+          <TabsTrigger value="documents">문서 관리</TabsTrigger>
           <TabsTrigger value="categories">카테고리 관리</TabsTrigger>
         </TabsList>
 
@@ -169,17 +198,76 @@ export default function AdminPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          variant="destructive" 
+                          size="sm"
                           onClick={() => handleBanUser(u.id)}
                           disabled={u.status === 'banned' || u.id === user?.id}
                         >
-                          <Ban className="w-4 h-4" />
+                          강퇴
                         </Button>
                       </TableCell>
                     </TableRow>
                   ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="documents">
+          <Card>
+            <CardHeader>
+              <CardTitle>문서 관리</CardTitle>
+              <CardDescription>
+                업로드된 문서를 관리하고 삭제할 수 있습니다.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>문서명</TableHead>
+                    <TableHead>카테고리</TableHead>
+                    <TableHead>보안등급</TableHead>
+                    <TableHead>작성자</TableHead>
+                    <TableHead>등록일</TableHead>
+                    <TableHead className="text-right">관리</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {documents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        등록된 문서가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    documents.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="font-medium">{doc.title}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {categories.find(c => c.id === doc.categoryId)?.path || '-'}
+                        </TableCell>
+                        <TableCell>
+                          {doc.securityLevel === 'secret' && <Badge variant="destructive">대외비</Badge>}
+                          {doc.securityLevel === 'important' && <Badge className="bg-amber-500">중요</Badge>}
+                          {doc.securityLevel === 'general' && <Badge variant="outline">일반</Badge>}
+                        </TableCell>
+                        <TableCell>{doc.authorName}</TableCell>
+                        <TableCell>{new Date(doc.createdAt).toLocaleDateString('ko-KR')}</TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handleDeleteDocument(doc.id, doc.title)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            삭제
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
