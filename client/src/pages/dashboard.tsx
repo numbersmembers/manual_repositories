@@ -105,7 +105,7 @@ export default function Dashboard() {
             <Button variant="link" size="sm">전체보기</Button>
           </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="flex flex-col gap-3">
           {recentDocs.length === 0 ? (
             <div className="text-sm text-muted-foreground py-8 text-center bg-slate-50 rounded-lg border border-dashed col-span-2">
               접근 가능한 문서가 없습니다.
