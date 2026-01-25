@@ -41,7 +41,7 @@ export async function setupAuth(app: Express) {
     return;
   }
 
-  const callbackURL = process.env.GOOGLE_CALLBACK_URL || "https://bloter-numbers-manual.replit.app/api/auth/google/callback";
+  const callbackURL = process.env.GOOGLE_CALLBACK_URL || "https://fileup.numbers.ai.kr/api/auth/google/callback";
   console.log('Using Google OAuth callback URL:', callbackURL);
 
   passport.use(
