@@ -24,25 +24,50 @@ class AuthStorage implements IAuthStorage {
 
   async upsertUser(userData: UpsertUser): Promise<User> {
     const name = [userData.firstName, userData.lastName].filter(Boolean).join(' ') || 'User';
+    const email = userData.email || '';
     
+    // First check if user exists by email (since email is unique)
+    const [existingByEmail] = await db.select().from(users).where(eq(users.email, email));
+    if (existingByEmail) {
+      // Update existing user and return
+      const [updated] = await db
+        .update(users)
+        .set({
+          name: name,
+          avatarUrl: userData.profileImageUrl,
+        })
+        .where(eq(users.email, email))
+        .returning();
+      return updated;
+    }
+    
+    // Check if user exists by ID
+    const [existingById] = await db.select().from(users).where(eq(users.id, userData.id));
+    if (existingById) {
+      // Update existing user by ID
+      const [updated] = await db
+        .update(users)
+        .set({
+          email: email,
+          name: name,
+          avatarUrl: userData.profileImageUrl,
+        })
+        .where(eq(users.id, userData.id))
+        .returning();
+      return updated;
+    }
+    
+    // Insert new user
     const [user] = await db
       .insert(users)
       .values({
         id: userData.id,
-        email: userData.email || '',
+        email: email,
         name: name,
         avatarUrl: userData.profileImageUrl,
         level: 1,
         isAdmin: 0,
         status: 'active',
-      })
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          email: userData.email || '',
-          name: name,
-          avatarUrl: userData.profileImageUrl,
-        },
       })
       .returning();
     return user;
