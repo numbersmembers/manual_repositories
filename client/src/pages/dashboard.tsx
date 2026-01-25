@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, FileSpreadsheet, FileIcon, Lock, ShieldAlert, Folder, Eye } from "lucide-react";
+import { FileText, FileSpreadsheet, FileIcon, Lock, ShieldAlert, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Document, Category } from "@/lib/types";
 import { Link, useLocation } from "wouter";
@@ -95,61 +95,28 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary" />
-              최근 문서
-            </h3>
-            <Link href="/documents">
-              <Button variant="link" size="sm">전체보기</Button>
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {recentDocs.length === 0 ? (
-              <div className="text-sm text-muted-foreground py-8 text-center bg-slate-50 rounded-lg border border-dashed">
-                접근 가능한 문서가 없습니다.
-              </div>
-            ) : (
-              recentDocs.map(doc => (
-                <DocumentCard key={doc.id} doc={doc} onClick={() => handleOpenDoc(doc)} />
-              ))
-            )}
-          </div>
-        </section>
-
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Folder className="w-5 h-5 text-primary" />
-              부서별 카테고리
-            </h3>
-          </div>
-          <div className="grid grid-cols-1 gap-3">
-             {categories.filter(c => !c.parentId).map(cat => (
-               <Link href="/documents" key={cat.id}>
-                 <div className="p-4 rounded-lg border bg-card hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer group flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">
-                        <Folder className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="font-medium group-hover:text-primary transition-colors">{cat.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {categories.filter(c => c.parentId === cat.id).length} 하위 카테고리
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-xs text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-                      {cat.path}
-                    </div>
-                 </div>
-               </Link>
-             ))}
-          </div>
-        </section>
-      </div>
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            최근 문서
+          </h3>
+          <Link href="/documents">
+            <Button variant="link" size="sm">전체보기</Button>
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {recentDocs.length === 0 ? (
+            <div className="text-sm text-muted-foreground py-8 text-center bg-slate-50 rounded-lg border border-dashed col-span-2">
+              접근 가능한 문서가 없습니다.
+            </div>
+          ) : (
+            recentDocs.map(doc => (
+              <DocumentCard key={doc.id} doc={doc} onClick={() => handleOpenDoc(doc)} />
+            ))
+          )}
+        </div>
+      </section>
 
     </div>
   );
