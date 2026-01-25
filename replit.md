@@ -21,24 +21,29 @@ Preferred communication style: Simple, everyday language.
 ### Backend Architecture
 - **Framework**: Express.js 5 running on Node.js
 - **API Pattern**: RESTful API endpoints under `/api/*` prefix
-- **Session Management**: express-session with in-memory storage (configurable for production)
-- **Authentication**: Email-based login with session cookies (simplified for demo purposes)
+- **Session Management**: express-session with PostgreSQL session store (connect-pg-simple)
+- **Authentication**: Google OAuth 2.0 via Passport.js (passport-google-oauth20)
 
 ### Data Storage
-- **Database**: PostgreSQL with Drizzle ORM
+- **Primary Database**: Supabase (PostgreSQL) when SUPABASE_URL is configured
+- **Fallback Database**: Replit PostgreSQL via DATABASE_URL
 - **Schema Location**: `shared/schema.ts` contains all table definitions
 - **Tables**: 
   - `users` - User accounts with level-based permissions (1-3)
   - `categories` - Hierarchical document categories with path tracking
   - `documents` - Document metadata with security levels and file references
+  - `login_logs` - Authentication activity logs (login/logout events)
+  - `comments` - Document comments for collaboration
 
 ### Authentication & Authorization
+- **OAuth Provider**: Google OAuth 2.0
 - **User Levels**: 
   - Level 1 (General): Access to general documents only
   - Level 2 (Staff): Access to general and important documents
   - Level 3 (Admin): Full access including secret documents and admin panel
 - **Middleware**: `requireAuth` and `requireAdmin` Express middleware for route protection
-- **Session**: Cookie-based sessions with 7-day expiration
+- **Session**: Cookie-based sessions with 7-day expiration, stored in PostgreSQL
+- **Login Logging**: All login/logout events recorded with IP address and user agent
 
 ### Key Design Patterns
 - **Shared Schema**: Database types and validation schemas shared between client and server via `@shared/*` alias
