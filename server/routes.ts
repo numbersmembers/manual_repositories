@@ -280,6 +280,23 @@ export async function registerRoutes(
   // Comment routes
   app.get("/api/documents/:documentId/comments", requireAuth, async (req, res) => {
     try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const document = await storage.getDocument(req.params.documentId);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      if (user.level === 1 && document.securityLevel !== 'general') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      if (user.level === 2 && document.securityLevel === 'secret') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
       const comments = await storage.getCommentsByDocument(req.params.documentId);
       res.json(comments);
     } catch (error) {
@@ -293,6 +310,18 @@ export async function registerRoutes(
       const user = await storage.getUser(req.session.userId!);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
+      }
+
+      const document = await storage.getDocument(req.params.documentId);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      if (user.level === 1 && document.securityLevel !== 'general') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      if (user.level === 2 && document.securityLevel === 'secret') {
+        return res.status(403).json({ message: "Access denied" });
       }
 
       const parsed = insertCommentSchema.safeParse({

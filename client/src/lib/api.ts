@@ -1,4 +1,4 @@
-import type { User, Category, Document } from './types';
+import type { User, Category, Document, Comment } from './types';
 
 const API_BASE = '/api';
 
@@ -178,6 +178,42 @@ export const documentApi = {
 
   async delete(documentId: string): Promise<void> {
     await apiRequest(`/documents/${documentId}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Comment API
+export const commentApi = {
+  async getByDocument(documentId: string): Promise<Comment[]> {
+    const comments = await apiRequest<any[]>(`/documents/${documentId}/comments`);
+    return comments.map(c => ({
+      id: c.id,
+      documentId: c.documentId,
+      authorId: c.authorId,
+      authorName: c.authorName,
+      content: c.content,
+      createdAt: c.createdAt
+    }));
+  },
+
+  async create(documentId: string, content: string): Promise<Comment> {
+    const comment = await apiRequest<any>(`/documents/${documentId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+    return {
+      id: comment.id,
+      documentId: comment.documentId,
+      authorId: comment.authorId,
+      authorName: comment.authorName,
+      content: comment.content,
+      createdAt: comment.createdAt
+    };
+  },
+
+  async delete(commentId: string): Promise<void> {
+    await apiRequest(`/comments/${commentId}`, {
       method: 'DELETE',
     });
   },

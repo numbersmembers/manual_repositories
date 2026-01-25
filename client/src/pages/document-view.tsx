@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
-import { Document, Category } from "@/lib/types";
-import { documentApi, categoryApi } from "@/lib/api";
+import { Document, Category, Comment } from "@/lib/types";
+import { documentApi, categoryApi, commentApi } from "@/lib/api";
+import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Download, Share2, Printer, FileText, Image, FileSpreadsheet, File } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Download, Share2, Printer, FileText, Image, FileSpreadsheet, File, MessageSquare, Send, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 function getDocumentIcon(type: string, size: "sm" | "lg" = "sm") {
   const sizeClass = size === "lg" ? "w-12 h-12" : "w-5 h-5";
@@ -57,9 +60,14 @@ function handleDownload(doc: Document) {
 export default function DocumentViewPage() {
   const params = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [doc, setDoc] = useState<Document | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -68,9 +76,13 @@ export default function DocumentViewPage() {
         const document = await documentApi.getById(params.id);
         setDoc(document);
         
-        const categories = await categoryApi.getAll();
+        const [categories, docComments] = await Promise.all([
+          categoryApi.getAll(),
+          commentApi.getByDocument(params.id)
+        ]);
         const cat = categories.find(c => c.id === document.categoryId);
         if (cat) setCategory(cat);
+        setComments(docComments);
       } catch (err: any) {
         setError(err.message || "문서를 불러오는데 실패했습니다.");
       } finally {
@@ -82,6 +94,32 @@ export default function DocumentViewPage() {
       loadDocument();
     }
   }, [params.id]);
+
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || !params.id) return;
+    
+    setSubmitting(true);
+    try {
+      const comment = await commentApi.create(params.id, newComment.trim());
+      setComments(prev => [comment, ...prev]);
+      setNewComment("");
+      toast({ title: "댓글이 등록되었습니다." });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "댓글 등록 실패", description: err.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      await commentApi.delete(commentId);
+      setComments(prev => prev.filter(c => c.id !== commentId));
+      toast({ title: "댓글이 삭제되었습니다." });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "댓글 삭제 실패", description: err.message });
+    }
+  };
 
   if (loading) {
     return (
@@ -197,6 +235,78 @@ export default function DocumentViewPage() {
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="card-3d">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <MessageSquare className="w-5 h-5" />
+            댓글 ({comments.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex gap-3">
+            <Textarea
+              placeholder="댓글을 입력하세요..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="flex-1 min-h-[80px] resize-none"
+              data-testid="input-comment"
+            />
+            <Button
+              onClick={handleSubmitComment}
+              disabled={!newComment.trim() || submitting}
+              className="btn-3d self-end"
+              data-testid="button-submit-comment"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {comments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">아직 댓글이 없습니다.</p>
+              <p className="text-xs mt-1">첫 번째 댓글을 작성해보세요!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {comments.map((comment) => (
+                <div
+                  key={comment.id}
+                  className="flex gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50"
+                  data-testid={`comment-item-${comment.id}`}
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-medium flex-shrink-0">
+                    {comment.authorName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{comment.authorName}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(comment.createdAt).toLocaleString('ko-KR')}
+                        </span>
+                      </div>
+                      {user?.level === 3 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDeleteComment(comment.id)}
+                          data-testid={`button-delete-comment-${comment.id}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-sm mt-1 whitespace-pre-wrap break-words">{comment.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

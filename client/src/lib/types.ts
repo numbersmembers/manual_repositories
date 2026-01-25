@@ -46,6 +46,15 @@ export interface Document {
   size?: string;
 }
 
+export interface Comment {
+  id: string;
+  documentId: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+  createdAt: string;
+}
+
 export const USER_LEVELS = {
   ADMIN: 3,
   STAFF: 2,
