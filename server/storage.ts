@@ -6,15 +6,9 @@ import {
 } from "@shared/schema";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { eq, and, or, sql, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 const { Pool } = pg;
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-export const db = drizzle(pool);
 
 export interface IStorage {
   // User operations
@@ -39,25 +33,50 @@ export interface IStorage {
   deleteDocument(id: string): Promise<void>;
 }
 
-export class DatabaseStorage implements IStorage {
+// Check if Supabase credentials are available
+const useSupabase = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
+
+// Create storage based on configuration
+function createStorage(): IStorage {
+  if (useSupabase) {
+    console.log('Using Supabase database');
+    const { supabaseStorage } = require('./storage-supabase');
+    return supabaseStorage;
+  } else {
+    console.log('Using Replit PostgreSQL database');
+    return new DatabaseStorage();
+  }
+}
+
+// Replit PostgreSQL storage implementation
+class DatabaseStorage implements IStorage {
+  private db;
+
+  constructor() {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+    this.db = drizzle(pool);
+  }
+
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    const [user] = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
     return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    const [user] = await this.db.select().from(users).where(eq(users.email, email)).limit(1);
     return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+    const [user] = await this.db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async updateUserLevel(id: string, level: number): Promise<User | undefined> {
-    const [user] = await db
+    const [user] = await this.db
       .update(users)
       .set({ level, isAdmin: level === 3 ? 1 : 0 })
       .where(eq(users.id, id))
@@ -66,7 +85,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserStatus(id: string, status: string): Promise<User | undefined> {
-    const [user] = await db
+    const [user] = await this.db
       .update(users)
       .set({ status })
       .where(eq(users.id, id))
@@ -75,50 +94,50 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users);
+    return await this.db.select().from(users);
   }
 
   // Category operations
   async getCategory(id: string): Promise<Category | undefined> {
-    const [category] = await db.select().from(categories).where(eq(categories.id, id)).limit(1);
+    const [category] = await this.db.select().from(categories).where(eq(categories.id, id)).limit(1);
     return category;
   }
 
   async getAllCategories(): Promise<Category[]> {
-    return await db.select().from(categories);
+    return await this.db.select().from(categories);
   }
 
   async createCategory(insertCategory: InsertCategory): Promise<Category> {
-    const [category] = await db.insert(categories).values(insertCategory).returning();
+    const [category] = await this.db.insert(categories).values(insertCategory).returning();
     return category;
   }
 
   async deleteCategory(id: string): Promise<void> {
-    await db.delete(categories).where(eq(categories.id, id));
+    await this.db.delete(categories).where(eq(categories.id, id));
   }
 
   // Document operations
   async getDocument(id: string): Promise<Document | undefined> {
-    const [document] = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
+    const [document] = await this.db.select().from(documents).where(eq(documents.id, id)).limit(1);
     return document;
   }
 
   async getAllDocuments(): Promise<Document[]> {
-    return await db.select().from(documents).orderBy(desc(documents.createdAt));
+    return await this.db.select().from(documents).orderBy(desc(documents.createdAt));
   }
 
   async getDocumentsByCategory(categoryId: string): Promise<Document[]> {
-    return await db.select().from(documents).where(eq(documents.categoryId, categoryId)).orderBy(desc(documents.createdAt));
+    return await this.db.select().from(documents).where(eq(documents.categoryId, categoryId)).orderBy(desc(documents.createdAt));
   }
 
   async createDocument(insertDocument: InsertDocument): Promise<Document> {
-    const [document] = await db.insert(documents).values(insertDocument).returning();
+    const [document] = await this.db.insert(documents).values(insertDocument).returning();
     return document;
   }
 
   async deleteDocument(id: string): Promise<void> {
-    await db.delete(documents).where(eq(documents.id, id));
+    await this.db.delete(documents).where(eq(documents.id, id));
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = createStorage();
