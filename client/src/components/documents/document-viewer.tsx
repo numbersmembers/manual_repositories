@@ -2,12 +2,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Document } from "@/lib/types";
-import { Download, Share2, Printer, X, FileText } from "lucide-react";
+import { Download, Share2, Printer, X, FileText, Image, FileSpreadsheet, File } from "lucide-react";
 
 interface DocumentViewerProps {
   document: Document | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+function getDocumentIcon(type: string) {
+  switch (type) {
+    case 'image': return <Image className="w-5 h-5 text-green-600" />;
+    case 'excel': return <FileSpreadsheet className="w-5 h-5 text-emerald-600" />;
+    case 'pdf': return <FileText className="w-5 h-5 text-red-600" />;
+    default: return <File className="w-5 h-5 text-blue-600" />;
+  }
 }
 
 export function DocumentViewer({ document, open, onOpenChange }: DocumentViewerProps) {
@@ -19,7 +28,7 @@ export function DocumentViewer({ document, open, onOpenChange }: DocumentViewerP
         <div className="flex items-center justify-between px-4 py-3 border-b bg-slate-50 dark:bg-slate-900/50">
           <div className="flex items-center gap-3">
              <div className="p-2 bg-white dark:bg-slate-800 rounded border">
-                <FileText className="w-5 h-5 text-blue-600" />
+                {getDocumentIcon(document.type)}
              </div>
              <div>
                <DialogTitle className="text-base font-semibold flex items-center gap-2">
@@ -42,35 +51,52 @@ export function DocumentViewer({ document, open, onOpenChange }: DocumentViewerP
               <Download className="w-3.5 h-3.5" />
               다운로드
             </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 ml-2"
+              onClick={() => onOpenChange(false)}
+              data-testid="button-close-preview"
+            >
+              <X className="w-4 h-4" />
+            </Button>
           </div>
         </div>
         
         <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-4 overflow-hidden relative">
-           {/* Mock Webview Content */}
            <div className="w-full h-full bg-white dark:bg-slate-900 shadow-sm border rounded-lg overflow-y-auto p-8 md:p-12">
-              <div className="max-w-2xl mx-auto space-y-6">
-                <div className="h-8 w-3/4 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
-                <div className="space-y-3">
-                  <div className="h-4 w-full bg-slate-100 dark:bg-slate-800/50 rounded animate-pulse delay-75" />
-                  <div className="h-4 w-full bg-slate-100 dark:bg-slate-800/50 rounded animate-pulse delay-100" />
-                  <div className="h-4 w-5/6 bg-slate-100 dark:bg-slate-800/50 rounded animate-pulse delay-150" />
-                  <div className="h-4 w-full bg-slate-100 dark:bg-slate-800/50 rounded animate-pulse delay-200" />
-                </div>
-                
-                <div className="h-32 w-full bg-slate-50 dark:bg-slate-800/30 rounded border border-dashed flex items-center justify-center text-muted-foreground text-sm my-8">
-                  [ 문서 미리보기 이미지 / 차트 영역 ]
-                </div>
+              <div className="max-w-2xl mx-auto">
+                <div className="text-center space-y-6">
+                  <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-lg inline-block">
+                    {getDocumentIcon(document.type)}
+                    <div className="mt-2 text-sm font-medium">{document.type.toUpperCase()}</div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold">{document.title}</h3>
+                    <p className="text-muted-foreground text-sm">
+                      작성자: {document.authorName}
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      등록일: {new Date(document.createdAt).toLocaleDateString('ko-KR')}
+                    </p>
+                    {document.size && (
+                      <p className="text-muted-foreground text-sm">
+                        파일 크기: {document.size}
+                      </p>
+                    )}
+                  </div>
 
-                <div className="space-y-3">
-                  <div className="h-4 w-full bg-slate-100 dark:bg-slate-800/50 rounded animate-pulse" />
-                  <div className="h-4 w-11/12 bg-slate-100 dark:bg-slate-800/50 rounded animate-pulse" />
-                  <div className="h-4 w-full bg-slate-100 dark:bg-slate-800/50 rounded animate-pulse" />
+                  <div className="p-8 border-2 border-dashed rounded-lg text-muted-foreground">
+                    <p className="text-sm">
+                      이 문서의 미리보기를 보려면 다운로드 버튼을 클릭하세요.
+                    </p>
+                    <p className="text-xs mt-2 opacity-70">
+                      (현재 버전에서는 파일 미리보기가 지원되지 않습니다)
+                    </p>
+                  </div>
                 </div>
               </div>
-           </div>
-           
-           <div className="absolute bottom-6 right-6 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-md">
-             Page 1 / 3
            </div>
         </div>
       </DialogContent>
