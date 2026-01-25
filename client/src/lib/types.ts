@@ -55,6 +55,17 @@ export interface Comment {
   createdAt: string;
 }
 
+export interface LoginLog {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  action: 'login' | 'logout';
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
 export const USER_LEVELS = {
   ADMIN: 3,
   STAFF: 2,

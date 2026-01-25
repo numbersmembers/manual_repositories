@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertDocumentSchema, insertCategorySchema, insertCommentSchema } from "@shared/schema";
+import { authStorage } from "./replit_integrations/auth/storage";
 import { z } from "zod";
 
 export async function registerRoutes(
@@ -137,6 +138,18 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Update user status error:", error);
       res.status(500).json({ message: "Failed to update user status" });
+    }
+  });
+
+  // Login logs route (admin only)
+  app.get("/api/login-logs", requireAdmin, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100;
+      const logs = await authStorage.getLoginLogs(limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Get login logs error:", error);
+      res.status(500).json({ message: "Failed to get login logs" });
     }
   });
 

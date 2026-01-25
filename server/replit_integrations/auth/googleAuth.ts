@@ -87,12 +87,42 @@ export async function setupAuth(app: Express) {
     passport.authenticate("google", {
       failureRedirect: "/login",
     }),
-    (req, res) => {
+    async (req, res) => {
+      const user = req.user as any;
+      if (user) {
+        try {
+          await authStorage.createLoginLog({
+            userId: user.id,
+            userEmail: user.email,
+            userName: user.name,
+            action: 'login',
+            ipAddress: req.ip || req.socket.remoteAddress,
+            userAgent: req.headers['user-agent'],
+          });
+        } catch (err) {
+          console.error('Failed to log login event:', err);
+        }
+      }
       res.redirect("/");
     }
   );
 
-  app.get("/api/logout", (req, res) => {
+  app.get("/api/logout", async (req, res) => {
+    const user = req.user as any;
+    if (user) {
+      try {
+        await authStorage.createLoginLog({
+          userId: user.id,
+          userEmail: user.email,
+          userName: user.name,
+          action: 'logout',
+          ipAddress: req.ip || req.socket.remoteAddress,
+          userAgent: req.headers['user-agent'],
+        });
+      } catch (err) {
+        console.error('Failed to log logout event:', err);
+      }
+    }
     req.logout(() => {
       res.redirect("/login");
     });

@@ -5,12 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldCheck, Trash2 } from "lucide-react";
+import { ShieldCheck, Trash2, LogIn, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
-import { User, Document, Category } from "@/lib/types";
+import { User, Document, Category, LoginLog } from "@/lib/types";
 import { CategoryManager } from "@/components/admin/category-manager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { userApi, documentApi, categoryApi } from "@/lib/api";
+import { userApi, documentApi, categoryApi, loginLogApi } from "@/lib/api";
 
 export default function AdminPage() {
   const { user, checkAccess } = useAuth();
@@ -18,6 +18,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,14 +29,16 @@ export default function AdminPage() {
 
   const loadData = async () => {
     try {
-      const [usersData, docsData, catsData] = await Promise.all([
+      const [usersData, docsData, catsData, logsData] = await Promise.all([
         userApi.getAll(),
         documentApi.getAll(),
-        categoryApi.getAll()
+        categoryApi.getAll(),
+        loginLogApi.getAll(200)
       ]);
       setUsers(usersData);
       setDocuments(docsData);
       setCategories(catsData);
+      setLoginLogs(logsData);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -135,6 +138,7 @@ export default function AdminPage() {
           <TabsTrigger value="users">사용자 관리</TabsTrigger>
           <TabsTrigger value="documents">문서 관리</TabsTrigger>
           <TabsTrigger value="categories">카테고리 관리</TabsTrigger>
+          <TabsTrigger value="logs">로그인 기록</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -284,6 +288,71 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <CategoryManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="logs">
+          <Card className="card-3d">
+            <CardHeader>
+              <CardTitle>로그인/로그아웃 기록</CardTitle>
+              <CardDescription>
+                모든 사용자의 인증 활동 기록을 확인합니다.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>사용자</TableHead>
+                    <TableHead>이메일</TableHead>
+                    <TableHead>활동</TableHead>
+                    <TableHead>IP 주소</TableHead>
+                    <TableHead>일시</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loginLogs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        로그인 기록이 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    loginLogs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell className="font-medium">{log.userName}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{log.userEmail}</TableCell>
+                        <TableCell>
+                          {log.action === 'login' ? (
+                            <Badge className="bg-green-600">
+                              <LogIn className="w-3 h-3 mr-1" />
+                              로그인
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">
+                              <LogOut className="w-3 h-3 mr-1" />
+                              로그아웃
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {log.ipAddress || '-'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {new Date(log.createdAt).toLocaleString('ko-KR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

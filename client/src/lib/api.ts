@@ -1,4 +1,4 @@
-import type { User, Category, Document, Comment } from './types';
+import type { User, Category, Document, Comment, LoginLog } from './types';
 
 const API_BASE = '/api';
 
@@ -216,5 +216,22 @@ export const commentApi = {
     await apiRequest(`/comments/${commentId}`, {
       method: 'DELETE',
     });
+  },
+};
+
+// Login Logs API (admin only)
+export const loginLogApi = {
+  async getAll(limit: number = 100): Promise<LoginLog[]> {
+    const logs = await apiRequest<any[]>(`/login-logs?limit=${limit}`);
+    return logs.map(log => ({
+      id: log.id,
+      userId: log.userId,
+      userEmail: log.userEmail,
+      userName: log.userName,
+      action: log.action,
+      ipAddress: log.ipAddress,
+      userAgent: log.userAgent,
+      createdAt: log.createdAt
+    }));
   },
 };

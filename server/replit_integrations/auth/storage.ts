@@ -1,6 +1,6 @@
-import { users } from "@shared/schema";
+import { users, loginLogs, type LoginLog } from "@shared/schema";
 import { db } from "../../db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export type User = typeof users.$inferSelect;
 export type UpsertUser = {
@@ -11,9 +11,20 @@ export type UpsertUser = {
   profileImageUrl?: string | null;
 };
 
+export type CreateLoginLog = {
+  userId: string;
+  userEmail: string;
+  userName: string;
+  action: 'login' | 'logout';
+  ipAddress?: string | null;
+  userAgent?: string | null;
+};
+
 export interface IAuthStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  createLoginLog(log: CreateLoginLog): Promise<LoginLog>;
+  getLoginLogs(limit?: number): Promise<LoginLog[]>;
 }
 
 class AuthStorage implements IAuthStorage {
@@ -71,6 +82,29 @@ class AuthStorage implements IAuthStorage {
       })
       .returning();
     return user;
+  }
+
+  async createLoginLog(log: CreateLoginLog): Promise<LoginLog> {
+    const [loginLog] = await db
+      .insert(loginLogs)
+      .values({
+        userId: log.userId,
+        userEmail: log.userEmail,
+        userName: log.userName,
+        action: log.action,
+        ipAddress: log.ipAddress,
+        userAgent: log.userAgent,
+      })
+      .returning();
+    return loginLog;
+  }
+
+  async getLoginLogs(limit: number = 100): Promise<LoginLog[]> {
+    return await db
+      .select()
+      .from(loginLogs)
+      .orderBy(desc(loginLogs.createdAt))
+      .limit(limit);
   }
 }
 
