@@ -47,6 +47,7 @@ export async function setupAuth(app: Express) {
         clientID,
         clientSecret,
         callbackURL: "/api/auth/google/callback",
+        proxy: true,
       },
       async (accessToken, refreshToken, profile: Profile, done) => {
         try {
