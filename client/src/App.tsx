@@ -11,6 +11,7 @@ import Dashboard from "@/pages/dashboard";
 import AdminPage from "@/pages/admin";
 import UploadPage from "@/pages/upload";
 import DocumentsPage from "@/pages/documents";
+import DocumentViewPage from "@/pages/document-view";
 import Layout from "@/components/layout/layout";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -48,6 +49,10 @@ function Router() {
 
       <Route path="/documents">
         <ProtectedRoute component={DocumentsPage} />
+      </Route>
+
+      <Route path="/documents/:id">
+        <ProtectedRoute component={DocumentViewPage} />
       </Route>
 
       <Route component={NotFound} />

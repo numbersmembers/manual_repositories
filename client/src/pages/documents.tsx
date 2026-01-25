@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/context/auth-context";
 import { Category, Document } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -20,17 +21,15 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { DocumentViewer } from "@/components/documents/document-viewer";
 import { documentApi, categoryApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 export default function DocumentsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [viewerOpen, setViewerOpen] = useState(false);
-  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,8 +107,7 @@ export default function DocumentsPage() {
   });
 
   const handleOpenDoc = (doc: Document) => {
-    setSelectedDoc(doc);
-    setViewerOpen(true);
+    setLocation(`/documents/${doc.id}`);
   };
 
   if (loading) {
@@ -234,11 +232,6 @@ export default function DocumentsPage() {
         </Card>
       </div>
 
-      <DocumentViewer 
-        document={selectedDoc} 
-        open={viewerOpen} 
-        onOpenChange={setViewerOpen} 
-      />
     </div>
   );
 }
