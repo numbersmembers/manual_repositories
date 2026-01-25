@@ -27,8 +27,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         credentials: 'include'
       });
       
-      if (response.ok) {
-        const userData = await response.json();
+      if (!response.ok) {
+        setUser(null);
+        return;
+      }
+      
+      const text = await response.text();
+      if (!text) {
+        setUser(null);
+        return;
+      }
+      
+      const userData = JSON.parse(text);
+      if (userData) {
         
         if (userData.status === 'banned') {
           toast({
