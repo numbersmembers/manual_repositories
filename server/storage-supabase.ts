@@ -1,7 +1,8 @@
 import { 
   type User, type InsertUser,
   type Category, type InsertCategory,
-  type Document, type InsertDocument
+  type Document, type InsertDocument,
+  type Comment, type InsertComment
 } from "@shared/schema";
 import { supabase } from "./supabase";
 import { IStorage } from "./storage";
@@ -189,6 +190,43 @@ export class SupabaseStorage implements IStorage {
     if (error) throw new Error(`Failed to delete document: ${error.message}`);
   }
 
+  // Comment operations
+  async getCommentsByDocument(documentId: string): Promise<Comment[]> {
+    const { data, error } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false });
+    
+    if (error || !data) return [];
+    return data.map(this.mapComment);
+  }
+
+  async createComment(insertComment: InsertComment): Promise<Comment> {
+    const { data, error } = await supabase
+      .from('comments')
+      .insert({
+        document_id: insertComment.documentId,
+        author_id: insertComment.authorId,
+        author_name: insertComment.authorName,
+        content: insertComment.content
+      })
+      .select()
+      .single();
+    
+    if (error) throw new Error(`Failed to create comment: ${error.message}`);
+    return this.mapComment(data);
+  }
+
+  async deleteComment(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('comments')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw new Error(`Failed to delete comment: ${error.message}`);
+  }
+
   // Helper methods to map Supabase snake_case to camelCase
   private mapUser(data: any): User {
     return {
@@ -225,6 +263,17 @@ export class SupabaseStorage implements IStorage {
       size: data.size,
       authorId: data.author_id,
       authorName: data.author_name,
+      createdAt: new Date(data.created_at)
+    };
+  }
+
+  private mapComment(data: any): Comment {
+    return {
+      id: data.id,
+      documentId: data.document_id,
+      authorId: data.author_id,
+      authorName: data.author_name,
+      content: data.content,
       createdAt: new Date(data.created_at)
     };
   }

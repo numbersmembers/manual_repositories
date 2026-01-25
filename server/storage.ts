@@ -2,7 +2,8 @@ import {
   type User, type InsertUser,
   type Category, type InsertCategory,
   type Document, type InsertDocument,
-  users, categories, documents
+  type Comment, type InsertComment,
+  users, categories, documents, comments
 } from "@shared/schema";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
@@ -31,6 +32,11 @@ export interface IStorage {
   getDocumentsByCategory(categoryId: string): Promise<Document[]>;
   createDocument(document: InsertDocument): Promise<Document>;
   deleteDocument(id: string): Promise<void>;
+  
+  // Comment operations
+  getCommentsByDocument(documentId: string): Promise<Comment[]>;
+  createComment(comment: InsertComment): Promise<Comment>;
+  deleteComment(id: string): Promise<void>;
 }
 
 import { supabaseStorage } from "./storage-supabase";
@@ -138,6 +144,20 @@ class DatabaseStorage implements IStorage {
 
   async deleteDocument(id: string): Promise<void> {
     await this.db.delete(documents).where(eq(documents.id, id));
+  }
+
+  // Comment operations
+  async getCommentsByDocument(documentId: string): Promise<Comment[]> {
+    return await this.db.select().from(comments).where(eq(comments.documentId, documentId)).orderBy(desc(comments.createdAt));
+  }
+
+  async createComment(insertComment: InsertComment): Promise<Comment> {
+    const [comment] = await this.db.insert(comments).values(insertComment).returning();
+    return comment;
+  }
+
+  async deleteComment(id: string): Promise<void> {
+    await this.db.delete(comments).where(eq(comments.id, id));
   }
 }
 
