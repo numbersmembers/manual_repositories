@@ -46,7 +46,7 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="pb-8">
           <Button 
-            className="btn-3d w-full h-12 font-medium text-base"
+            className="btn-3d w-full h-12 font-medium text-base bg-[#990f3b]"
             onClick={handleGoogleLogin}
           >
             Google 계정으로 로그인
