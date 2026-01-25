@@ -1,7 +1,7 @@
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 
@@ -37,8 +37,8 @@ export default function LoginPage() {
       
       <Card className="card-3d w-full max-w-md border-none bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
         <CardHeader className="space-y-1 text-center pb-8 pt-10">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center mb-5 shadow-xl shadow-primary/30 transform hover:scale-105 transition-transform duration-300">
-            <Lock className="w-8 h-8 text-white" />
+          <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center mb-5 shadow-xl shadow-primary/30 transform hover:scale-105 transition-transform duration-300 overflow-hidden">
+            <img src="/favicon.png" alt="Numbers" className="w-full h-full object-cover" />
           </div>
           <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
             Bloter/Numbers
