@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
@@ -40,9 +41,13 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // 인증됨 → DB에서 사용자 상태 확인
+  // 인증됨 → DB에서 사용자 상태 확인 (service role로 RLS 우회)
   if (authUser && !isPublic) {
-    const { data: dbUser } = await supabase
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: dbUser } = await serviceClient
       .from('users')
       .select('status, role')
       .eq('email', authUser.email)

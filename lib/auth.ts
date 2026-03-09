@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import type { User } from './types'
 
 export async function getAuthUser(): Promise<User | null> {
@@ -9,7 +9,8 @@ export async function getAuthUser(): Promise<User | null> {
 
   if (!authUser?.email) return null
 
-  const { data: dbUser } = await supabase
+  const serviceClient = await createServiceClient()
+  const { data: dbUser } = await serviceClient
     .from('users')
     .select('*')
     .eq('email', authUser.email)

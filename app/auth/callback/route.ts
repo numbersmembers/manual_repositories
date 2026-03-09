@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -11,6 +11,8 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
+      const serviceClient = await createServiceClient()
+
       // DB에 사용자가 없으면 생성 (pending 상태)
       const email = data.user.email ?? ''
       const name =
@@ -22,7 +24,7 @@ export async function GET(request: Request) {
         data.user.user_metadata?.picture ??
         null
 
-      const { data: existing } = await supabase
+      const { data: existing } = await serviceClient
         .from('users')
         .select('id')
         .eq('email', email)
@@ -30,13 +32,13 @@ export async function GET(request: Request) {
 
       if (existing) {
         // 기존 사용자: 이름/아바타 업데이트
-        await supabase
+        await serviceClient
           .from('users')
           .update({ name, avatar_url: avatarUrl })
           .eq('email', email)
       } else {
         // 신규 사용자: pending 상태로 생성
-        await supabase.from('users').insert({
+        await serviceClient.from('users').insert({
           email,
           name,
           avatar_url: avatarUrl,
@@ -46,14 +48,14 @@ export async function GET(request: Request) {
       }
 
       // 로그인 로그 기록
-      const { data: dbUser } = await supabase
+      const { data: dbUser } = await serviceClient
         .from('users')
         .select('id, name')
         .eq('email', email)
         .single()
 
       if (dbUser) {
-        await supabase.from('activity_logs').insert({
+        await serviceClient.from('activity_logs').insert({
           user_id: dbUser.id,
           user_email: email,
           user_name: dbUser.name,
