@@ -13,7 +13,7 @@ export function Header({ title }: HeaderProps) {
     <header className="flex h-14 items-center gap-4 border-b bg-background px-4">
       <SidebarTrigger />
       <Separator orientation="vertical" className="h-6" />
-      {title && <h1 className="text-lg font-semibold">{title}</h1>}
+      {title && <h1 className="text-lg font-bold tracking-tight">{title}</h1>}
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
       </div>

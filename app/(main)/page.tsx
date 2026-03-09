@@ -33,7 +33,7 @@ export default async function HomePage() {
       <div className="flex-1 space-y-6 p-6">
         {/* 인사말 */}
         <div>
-          <h2 className="text-2xl font-bold">{user.name}님, 환영합니다</h2>
+          <h2 className="text-2xl font-black tracking-tight">{user.name}님, 환영합니다</h2>
           <p className="text-muted-foreground">
             Bloter/Numbers 업무 매뉴얼 문서함
           </p>

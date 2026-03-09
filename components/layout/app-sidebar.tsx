@@ -56,11 +56,11 @@ export function AppSidebar({ user, categories }: AppSidebarProps) {
     <Sidebar>
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-black text-sm">
             MR
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold">Manual Repo</span>
+            <span className="text-sm font-bold tracking-tight">Manual Repo</span>
             <span className="text-xs text-muted-foreground">Bloter/Numbers</span>
           </div>
         </Link>

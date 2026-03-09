@@ -9,7 +9,7 @@ export default async function PendingPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="w-full max-w-sm space-y-4 text-center">
-        <h1 className="text-2xl font-bold">승인 대기중</h1>
+        <h1 className="text-2xl font-black tracking-tight">승인 대기중</h1>
         <p className="text-sm text-muted-foreground">
           관리자의 승인을 기다리고 있습니다.
           <br />
