@@ -7,7 +7,6 @@ import {
   FolderOpen,
   Upload,
   Bookmark,
-  Settings,
   Users,
   Activity,
   FolderTree,
@@ -23,13 +22,13 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { User, Category } from '@/lib/types'
 import { CategoryTree } from './category-tree'
+import { cn } from '@/lib/utils'
 
 interface AppSidebarProps {
   user: User
@@ -49,19 +48,49 @@ const adminNav = [
   { title: '활동 로그', href: '/admin/logs', icon: Activity },
 ]
 
+function NavItem({
+  href,
+  icon: Icon,
+  title,
+  isActive,
+}: {
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  isActive: boolean
+}) {
+  return (
+    <SidebarMenuItem>
+      <Link
+        href={href}
+        className={cn(
+          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
+          'border border-transparent',
+          isActive
+            ? 'bg-primary/10 text-primary border-primary/20 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06)]'
+            : 'text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border hover:shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+        )}
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="tracking-tight">{title}</span>
+      </Link>
+    </SidebarMenuItem>
+  )
+}
+
 export function AppSidebar({ user, categories }: AppSidebarProps) {
   const pathname = usePathname()
 
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-black text-sm">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-black text-sm shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.08)]">
             MR
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold tracking-tight">Manual Repo</span>
-            <span className="text-xs text-muted-foreground">Bloter/Numbers</span>
+            <span className="text-[11px] text-muted-foreground">Bloter/Numbers</span>
           </div>
         </Link>
       </SidebarHeader>
@@ -72,25 +101,20 @@ export function AppSidebar({ user, categories }: AppSidebarProps) {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  className="text-muted-foreground"
-                  id="search-trigger"
+                <button
+                  onClick={() => {
+                    document.dispatchEvent(
+                      new KeyboardEvent('keydown', { key: 'k', metaKey: true })
+                    )
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg border border-border bg-accent/50 px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-accent hover:shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
                 >
-                  <button
-                    onClick={() => {
-                      document.dispatchEvent(
-                        new KeyboardEvent('keydown', { key: 'k', metaKey: true })
-                      )
-                    }}
-                  >
-                    <Search className="h-4 w-4" />
-                    <span>검색</span>
-                    <kbd className="ml-auto pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
-                      ⌘K
-                    </kbd>
-                  </button>
-                </SidebarMenuButton>
+                  <Search className="h-4 w-4" />
+                  <span>검색</span>
+                  <kbd className="ml-auto pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
+                    ⌘K
+                  </kbd>
+                </button>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -100,18 +124,19 @@ export function AppSidebar({ user, categories }: AppSidebarProps) {
 
         {/* 메인 네비게이션 */}
         <SidebarGroup>
-          <SidebarGroupLabel>워크스페이스</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
+            워크스페이스
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-0.5">
               {mainNav.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href}>
-                    <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <NavItem
+                  key={item.href}
+                  href={item.href}
+                  icon={item.icon}
+                  title={item.title}
+                  isActive={pathname === item.href}
+                />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -121,7 +146,9 @@ export function AppSidebar({ user, categories }: AppSidebarProps) {
 
         {/* 폴더 트리 */}
         <SidebarGroup>
-          <SidebarGroupLabel>폴더</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
+            폴더
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <CategoryTree categories={categories} currentPath={pathname} />
           </SidebarGroupContent>
@@ -132,21 +159,19 @@ export function AppSidebar({ user, categories }: AppSidebarProps) {
           <>
             <SidebarSeparator />
             <SidebarGroup>
-              <SidebarGroupLabel>관리자</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                관리자
+              </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="space-y-0.5">
                   {adminNav.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={pathname.startsWith(item.href)}
-                      >
-                        <Link href={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <NavItem
+                      key={item.href}
+                      href={item.href}
+                      icon={item.icon}
+                      title={item.title}
+                      isActive={pathname.startsWith(item.href)}
+                    />
                   ))}
                 </SidebarMenu>
               </SidebarGroupContent>
@@ -156,14 +181,16 @@ export function AppSidebar({ user, categories }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter className="p-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-accent/30 px-3 py-2.5">
+          <Avatar className="h-8 w-8 shadow-sm">
             <AvatarImage src={user.avatar_url || undefined} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+              {user.name.charAt(0)}
+            </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            <p className="text-sm font-bold tracking-tight truncate">{user.name}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
           </div>
           <Link
             href="/auth/signout"

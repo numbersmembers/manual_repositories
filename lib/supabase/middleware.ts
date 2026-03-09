@@ -34,11 +34,21 @@ export async function updateSession(request: NextRequest) {
   const publicPaths = ['/login', '/auth/callback']
   const isPublic = publicPaths.some((p) => path.startsWith(p))
 
+  // redirect 시 쿠키를 복사하는 헬퍼
+  function redirectWithCookies(pathname: string) {
+    const url = request.nextUrl.clone()
+    url.pathname = pathname
+    const redirectResponse = NextResponse.redirect(url)
+    // supabaseResponse에 설정된 쿠키를 redirect 응답에 복사
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value)
+    })
+    return redirectResponse
+  }
+
   // 미인증 → 로그인으로
   if (!authUser && !isPublic) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+    return redirectWithCookies('/login')
   }
 
   // 인증됨 → DB에서 사용자 상태 확인 (service role로 RLS 우회)
@@ -54,29 +64,21 @@ export async function updateSession(request: NextRequest) {
       .single()
 
     if (dbUser?.status === 'pending' && path !== '/pending') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/pending'
-      return NextResponse.redirect(url)
+      return redirectWithCookies('/pending')
     }
 
     if (dbUser?.status === 'banned') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth/signout'
-      return NextResponse.redirect(url)
+      return redirectWithCookies('/auth/signout')
     }
 
     if (path.startsWith('/admin') && dbUser?.role !== 'admin') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
+      return redirectWithCookies('/')
     }
   }
 
   // 인증된 사용자가 /login 접근 시 홈으로
   if (authUser && path === '/login') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/'
-    return NextResponse.redirect(url)
+    return redirectWithCookies('/')
   }
 
   return supabaseResponse

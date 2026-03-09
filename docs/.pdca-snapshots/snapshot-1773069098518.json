@@ -1,0 +1,741 @@
+{
+  "timestamp": "2026-03-09T15:11:38.514Z",
+  "reason": "compaction",
+  "status": {
+    "version": "2.0",
+    "lastUpdated": "2026-03-09T14:00:18.391Z",
+    "activeFeatures": [
+      "v2-refactoring",
+      "manual_repositories",
+      "supabase",
+      "callback",
+      "signout",
+      "login",
+      "pending",
+      "documents",
+      "upload",
+      "admin",
+      "ui",
+      "users",
+      "[id]",
+      "categories",
+      "move",
+      "search",
+      "tags",
+      "bookmarks",
+      "comments",
+      "activity-logs",
+      "download",
+      "layout",
+      "(main)",
+      "logs"
+    ],
+    "primaryFeature": "v2-refactoring",
+    "features": {
+      "v2-refactoring": {
+        "phase": "design",
+        "planPath": "docs/01-plan/features/v2-refactoring.plan.md",
+        "designPath": "docs/02-design/features/v2-refactoring.design.md",
+        "startedAt": "2026-03-09T13:00:00.000Z",
+        "lastActivity": "2026-03-09T13:30:00.000Z"
+      },
+      "manual_repositories": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:24:01.198Z",
+          "lastUpdated": "2026-03-09T13:47:38.483Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\hooks\\use-toast.ts"
+      },
+      "supabase": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:24:04.816Z",
+          "lastUpdated": "2026-03-09T13:49:52.672Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\lib\\supabase\\server.ts"
+      },
+      "callback": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:25:22.582Z",
+          "lastUpdated": "2026-03-09T13:25:22.582Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\auth\\callback\\route.ts"
+      },
+      "signout": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:25:24.609Z",
+          "lastUpdated": "2026-03-09T13:25:24.609Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\auth\\signout\\route.ts"
+      },
+      "login": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:30:03.589Z",
+          "lastUpdated": "2026-03-09T13:30:03.590Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\login\\page.tsx"
+      },
+      "pending": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:30:10.223Z",
+          "lastUpdated": "2026-03-09T13:30:10.223Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\pending\\page.tsx"
+      },
+      "documents": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:30:11.963Z",
+          "lastUpdated": "2026-03-09T13:58:27.672Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\(main)\\documents\\page.tsx"
+      },
+      "upload": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:30:14.056Z",
+          "lastUpdated": "2026-03-09T13:59:22.696Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\(main)\\upload\\page.tsx"
+      },
+      "admin": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:30:15.924Z",
+          "lastUpdated": "2026-03-09T13:59:35.565Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\(main)\\admin\\page.tsx"
+      },
+      "ui": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:36:59.166Z",
+          "lastUpdated": "2026-03-09T13:45:05.023Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\components\\ui\\resizable.tsx"
+      },
+      "users": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:52:21.882Z",
+          "lastUpdated": "2026-03-09T13:59:51.271Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\(main)\\admin\\users\\page.tsx"
+      },
+      "[id]": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:52:29.489Z",
+          "lastUpdated": "2026-03-09T13:58:55.481Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\(main)\\documents\\[id]\\page.tsx"
+      },
+      "categories": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:52:36.750Z",
+          "lastUpdated": "2026-03-09T14:00:06.133Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\(main)\\admin\\categories\\page.tsx"
+      },
+      "move": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:53:04.865Z",
+          "lastUpdated": "2026-03-09T13:53:04.865Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\api\\documents\\[id]\\move\\route.ts"
+      },
+      "search": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:53:10.036Z",
+          "lastUpdated": "2026-03-09T13:53:10.036Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\api\\documents\\search\\route.ts"
+      },
+      "tags": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:53:25.323Z",
+          "lastUpdated": "2026-03-09T13:53:25.323Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\api\\tags\\route.ts"
+      },
+      "bookmarks": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:53:33.490Z",
+          "lastUpdated": "2026-03-09T13:59:28.029Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\(main)\\bookmarks\\page.tsx"
+      },
+      "comments": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:53:39.053Z",
+          "lastUpdated": "2026-03-09T13:53:39.053Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\api\\comments\\route.ts"
+      },
+      "activity-logs": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:53:46.700Z",
+          "lastUpdated": "2026-03-09T13:53:46.700Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\api\\activity-logs\\route.ts"
+      },
+      "download": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:54:09.068Z",
+          "lastUpdated": "2026-03-09T13:54:09.068Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\api\\documents\\[id]\\download\\route.ts"
+      },
+      "layout": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:56:46.891Z",
+          "lastUpdated": "2026-03-09T13:57:09.428Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\components\\layout\\theme-toggle.tsx"
+      },
+      "(main)": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T13:57:19.474Z",
+          "lastUpdated": "2026-03-09T13:58:09.945Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\(main)\\page.tsx"
+      },
+      "logs": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-09T14:00:18.391Z",
+          "lastUpdated": "2026-03-09T14:00:18.391Z"
+        },
+        "lastFile": "c:\\Users\\user\\manual_repositories\\app\\(main)\\admin\\logs\\page.tsx"
+      }
+    },
+    "pipeline": {
+      "currentPhase": 2,
+      "level": "Dynamic",
+      "phaseHistory": [
+        "plan"
+      ]
+    },
+    "session": {
+      "startedAt": "2026-03-09T12:13:02.129Z",
+      "onboardingCompleted": true,
+      "lastActivity": "2026-03-09T14:00:18.391Z"
+    },
+    "history": [
+      {
+        "timestamp": "2026-03-09T13:24:01.199Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:24:04.816Z",
+        "feature": "supabase",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:24:15.318Z",
+        "feature": "supabase",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:24:24.063Z",
+        "feature": "supabase",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:24:25.752Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:24:48.830Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:24:55.215Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:24:57.891Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:25:01.167Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:25:06.134Z",
+        "feature": "supabase",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:25:14.461Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:25:22.582Z",
+        "feature": "callback",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:25:24.609Z",
+        "feature": "signout",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:26:08.964Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:29:59.443Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:30:03.590Z",
+        "feature": "login",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:30:10.223Z",
+        "feature": "pending",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:30:11.964Z",
+        "feature": "documents",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:30:14.056Z",
+        "feature": "upload",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:30:15.924Z",
+        "feature": "admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:30:22.167Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:36:59.166Z",
+        "feature": "ui",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:38:14.172Z",
+        "feature": "ui",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:39:27.175Z",
+        "feature": "ui",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:40:34.948Z",
+        "feature": "ui",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:41:35.698Z",
+        "feature": "ui",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:42:41.739Z",
+        "feature": "ui",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:43:51.433Z",
+        "feature": "ui",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:45:05.023Z",
+        "feature": "ui",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:46:14.089Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:47:38.484Z",
+        "feature": "manual_repositories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:48:45.751Z",
+        "feature": "supabase",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:49:52.672Z",
+        "feature": "supabase",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:52:21.882Z",
+        "feature": "users",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:52:29.489Z",
+        "feature": "[id]",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:52:36.750Z",
+        "feature": "categories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:52:44.050Z",
+        "feature": "[id]",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:52:50.485Z",
+        "feature": "documents",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:52:59.824Z",
+        "feature": "[id]",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:53:04.865Z",
+        "feature": "move",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:53:10.036Z",
+        "feature": "search",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:53:21.395Z",
+        "feature": "upload",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:53:25.323Z",
+        "feature": "tags",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:53:27.577Z",
+        "feature": "[id]",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:53:33.490Z",
+        "feature": "bookmarks",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:53:39.053Z",
+        "feature": "comments",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:53:42.882Z",
+        "feature": "[id]",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:53:46.700Z",
+        "feature": "activity-logs",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:54:09.068Z",
+        "feature": "download",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:56:46.892Z",
+        "feature": "layout",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:56:51.575Z",
+        "feature": "layout",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:57:05.449Z",
+        "feature": "layout",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:57:07.458Z",
+        "feature": "layout",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:57:09.428Z",
+        "feature": "layout",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:57:19.474Z",
+        "feature": "(main)",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:58:09.945Z",
+        "feature": "(main)",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:58:27.672Z",
+        "feature": "documents",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:58:55.481Z",
+        "feature": "[id]",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:59:22.696Z",
+        "feature": "upload",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:59:28.029Z",
+        "feature": "bookmarks",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:59:35.565Z",
+        "feature": "admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T13:59:51.271Z",
+        "feature": "users",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T14:00:06.133Z",
+        "feature": "categories",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-09T14:00:18.391Z",
+        "feature": "logs",
+        "phase": "do",
+        "action": "updated"
+      }
+    ]
+  }
+}

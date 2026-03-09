@@ -2,8 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { Header } from '@/components/layout/header'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, FolderOpen, Users, Upload } from 'lucide-react'
+import { FileText, FolderOpen, Upload, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function HomePage() {
@@ -12,7 +11,6 @@ export default async function HomePage() {
 
   const supabase = await createClient()
 
-  // 통계 조회
   const [docsRes, catsRes, recentRes] = await Promise.all([
     supabase.from('documents').select('id', { count: 'exact', head: true }),
     supabase.from('categories').select('id', { count: 'exact', head: true }),
@@ -30,87 +28,89 @@ export default async function HomePage() {
   return (
     <>
       <Header title="대시보드" />
-      <div className="flex-1 space-y-6 p-6">
+      <div className="flex-1 space-y-8 p-6">
         {/* 인사말 */}
         <div>
-          <h2 className="text-2xl font-black tracking-tight">{user.name}님, 환영합니다</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-3xl font-black tracking-tight">{user.name}님, 환영합니다</h2>
+          <p className="mt-1 text-muted-foreground">
             Bloter/Numbers 업무 매뉴얼 문서함
           </p>
         </div>
 
         {/* 통계 카드 */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">전체 문서</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{docCount}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">카테고리</CardTitle>
-              <FolderOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{catCount}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">빠른 메뉴</CardTitle>
-              <Upload className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <Link
-                href="/upload"
-                className="text-sm text-primary hover:underline"
-              >
-                파일 업로드하기 →
-              </Link>
-            </CardContent>
-          </Card>
+          <div className="rounded-lg border bg-card p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-[0_4px_6px_rgba(0,0,0,0.07),0_2px_4px_rgba(0,0,0,0.06)]">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold tracking-tight text-muted-foreground">전체 문서</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <FileText className="h-4 w-4 text-primary" />
+              </div>
+            </div>
+            <div className="mt-3 text-3xl font-black tracking-tight">{docCount}</div>
+          </div>
+          <div className="rounded-lg border bg-card p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-[0_4px_6px_rgba(0,0,0,0.07),0_2px_4px_rgba(0,0,0,0.06)]">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold tracking-tight text-muted-foreground">카테고리</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <FolderOpen className="h-4 w-4 text-primary" />
+              </div>
+            </div>
+            <div className="mt-3 text-3xl font-black tracking-tight">{catCount}</div>
+          </div>
+          <Link
+            href="/upload"
+            className="group rounded-lg border bg-primary p-5 text-primary-foreground shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.08)] transition-all hover:shadow-[0_4px_6px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.08)] hover:opacity-95"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold tracking-tight opacity-80">파일 업로드</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
+                <Upload className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-lg font-bold">
+              업로드하기
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </div>
+          </Link>
         </div>
 
         {/* 최근 문서 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>최근 업로드 문서</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentDocs.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+        <div>
+          <h3 className="mb-4 text-lg font-bold tracking-tight">최근 업로드 문서</h3>
+          {recentDocs.length === 0 ? (
+            <div className="rounded-lg border bg-card p-8 text-center">
+              <FileText className="mx-auto h-10 w-10 text-muted-foreground/40" />
+              <p className="mt-3 text-sm text-muted-foreground">
                 아직 업로드된 문서가 없습니다.
               </p>
-            ) : (
-              <div className="space-y-3">
-                {recentDocs.map((doc) => (
-                  <Link
-                    key={doc.id}
-                    href={`/documents/${doc.id}`}
-                    className="flex items-center justify-between rounded-md border p-3 hover:bg-accent transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">{doc.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {doc.author_name} · {doc.file_name}
-                        </p>
-                      </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {recentDocs.map((doc) => (
+                <Link
+                  key={doc.id}
+                  href={`/documents/${doc.id}`}
+                  className="flex items-center justify-between rounded-lg border bg-card p-4 transition-all hover:shadow-[0_2px_4px_rgba(0,0,0,0.06)] hover:border-primary/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(doc.created_at).toLocaleDateString('ko-KR')}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    <div>
+                      <p className="text-sm font-bold tracking-tight">{doc.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {doc.author_name} · {doc.file_name}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {new Date(doc.created_at).toLocaleDateString('ko-KR')}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </>
   )

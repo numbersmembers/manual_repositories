@@ -1,19 +1,47 @@
 import { NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const requestUrl = new URL(request.url)
+  const code = requestUrl.searchParams.get('code')
+  const next = requestUrl.searchParams.get('next') ?? '/'
 
   if (code) {
-    const supabase = await createClient()
+    // redirect 응답을 먼저 생성하고, 쿠키를 이 응답에 직접 설정
+    const redirectUrl = `${requestUrl.origin}${next}`
+    const response = NextResponse.redirect(redirectUrl)
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            const cookieHeader = request.headers.get('cookie') ?? ''
+            return cookieHeader.split(';').filter(Boolean).map((c) => {
+              const [name, ...rest] = c.trim().split('=')
+              return { name, value: rest.join('=') }
+            })
+          },
+          setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options as Record<string, string>)
+            })
+          },
+        },
+      }
+    )
+
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
-      const serviceClient = await createServiceClient()
+      // DB 작업은 service role로 (RLS 우회)
+      const serviceClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
 
-      // DB에 사용자가 없으면 생성 (pending 상태)
       const email = data.user.email ?? ''
       const name =
         data.user.user_metadata?.full_name ??
@@ -31,13 +59,11 @@ export async function GET(request: Request) {
         .single()
 
       if (existing) {
-        // 기존 사용자: 이름/아바타 업데이트
         await serviceClient
           .from('users')
           .update({ name, avatar_url: avatarUrl })
           .eq('email', email)
       } else {
-        // 신규 사용자: pending 상태로 생성
         await serviceClient.from('users').insert({
           email,
           name,
@@ -47,7 +73,7 @@ export async function GET(request: Request) {
         })
       }
 
-      // 로그인 로그 기록
+      // 로그인 로그
       const { data: dbUser } = await serviceClient
         .from('users')
         .select('id, name')
@@ -66,9 +92,9 @@ export async function GET(request: Request) {
         })
       }
 
-      return NextResponse.redirect(`${origin}${next}`)
+      return response
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+  return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_failed`)
 }
