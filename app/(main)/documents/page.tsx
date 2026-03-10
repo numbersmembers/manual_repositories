@@ -15,6 +15,7 @@ import { Header } from '@/components/layout/header'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn, formatFileSize, formatDate } from '@/lib/utils'
+import { toast } from 'sonner'
 import { useUser } from '@/components/user-provider'
 import type { Document } from '@/lib/types'
 
@@ -51,11 +52,22 @@ export default function DocumentsPage() {
 
   const toggleBookmark = async (docId: string, e: React.MouseEvent) => {
     e.preventDefault()
-    await fetch('/api/bookmarks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ document_id: docId, user_email: user.email }),
-    })
+    e.stopPropagation()
+    try {
+      const res = await fetch('/api/bookmarks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document_id: docId, user_email: user.email }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        toast.success(data.bookmarked ? '북마크 추가됨' : '북마크 제거됨')
+      } else {
+        toast.error('북마크 처리에 실패했습니다.')
+      }
+    } catch {
+      toast.error('네트워크 오류가 발생했습니다.')
+    }
   }
 
   return (

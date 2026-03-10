@@ -28,9 +28,18 @@ export default function LoginPage() {
             Bloter/Numbers 업무 매뉴얼 문서함
           </p>
         </div>
-        <Button onClick={handleGoogleLogin} className="w-full" size="lg">
-          Google 계정으로 로그인
-        </Button>
+        <div className="space-y-3">
+          <Button
+            onClick={handleGoogleLogin}
+            className="w-full shadow-[0_4px_0_0_hsl(var(--primary)/0.4)] hover:shadow-[0_2px_0_0_hsl(var(--primary)/0.4)] hover:translate-y-[2px] active:shadow-none active:translate-y-[4px] transition-all duration-100"
+            size="lg"
+          >
+            Google 계정으로 로그인
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            모든 활동은 로그에 기록됩니다
+          </p>
+        </div>
       </div>
     </div>
   )
