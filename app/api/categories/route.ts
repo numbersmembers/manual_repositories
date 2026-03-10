@@ -1,14 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/server'
-import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 import type { User } from '@/lib/types'
 
-// Get admin user with fallback for production cookie issues
-async function getAdmin(): Promise<User> {
-  const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  const email = session?.user?.email
+// Create auth client directly from request cookies (bypasses next/headers cookies())
+function createAuthClientFromRequest(request: NextRequest) {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll() {
+          // Not needed for read-only auth check
+        },
+      },
+    }
+  )
+}
+
+async function getAdminFromRequest(request: NextRequest): Promise<User> {
+  const supabase = createAuthClientFromRequest(request)
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  const email = authUser?.email
   if (!email) throw new Error('Unauthorized')
 
   const serviceClient = createServiceClient()
@@ -25,7 +42,6 @@ async function getAdmin(): Promise<User> {
 }
 
 // GET /api/categories - 카테고리 트리 조회
-// Auth is handled by layout — service client bypasses RLS
 export async function GET() {
   const supabase = createServiceClient()
 
@@ -45,7 +61,7 @@ export async function GET() {
 // POST /api/categories - 카테고리 생성 (관리자 전용)
 export async function POST(request: NextRequest) {
   try {
-    const admin = await getAdmin()
+    const admin = await getAdminFromRequest(request)
     const body = await request.json()
     const { name, sort_order } = body
     const parentId = body.parent_id && body.parent_id !== 'none' ? body.parent_id : null
@@ -56,7 +72,6 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient()
 
-    // path 생성: 부모가 있으면 부모 경로에 추가
     let path = name
     if (parentId) {
       const { data: parent } = await supabase

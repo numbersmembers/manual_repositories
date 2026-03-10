@@ -1,27 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAdmin } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
+import type { User } from '@/lib/types'
 
-// PATCH /api/categories/[id] - 카테고리 수정 (관리자 전용)
+function createAuthClientFromRequest(request: NextRequest) {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll() {},
+      },
+    }
+  )
+}
+
+async function getAdminFromRequest(request: NextRequest): Promise<User> {
+  const supabase = createAuthClientFromRequest(request)
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  const email = authUser?.email
+  if (!email) throw new Error('Unauthorized')
+
+  const serviceClient = createServiceClient()
+  const { data: user } = await serviceClient
+    .from('users')
+    .select('*')
+    .eq('email', email)
+    .single()
+
+  if (!user) throw new Error('Unauthorized')
+  if (user.status !== 'active') throw new Error('Forbidden')
+  if (user.role !== 'admin') throw new Error('Forbidden: Admin required')
+  return user as User
+}
+
+// PATCH /api/categories/[id]
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const admin = await requireAdmin()
+    await getAdminFromRequest(request)
     const { id } = await params
     const body = await request.json()
     const { name, parent_id, sort_order } = body
 
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     const updateData: Record<string, unknown> = {}
     if (name !== undefined) updateData.name = name
     if (parent_id !== undefined) updateData.parent_id = parent_id || null
     if (sort_order !== undefined) updateData.sort_order = sort_order
 
-    // path 재생성
     if (name || parent_id !== undefined) {
       const catName = name
       if (parent_id) {
@@ -55,15 +89,15 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/categories/[id] - 카테고리 삭제 (관리자 전용, CASCADE)
+// DELETE /api/categories/[id]
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const admin = await requireAdmin()
+    const admin = await getAdminFromRequest(request)
     const { id } = await params
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     const { data: category } = await supabase
       .from('categories')
