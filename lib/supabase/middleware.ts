@@ -31,7 +31,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
-  const publicPaths = ['/login', '/auth/callback']
+  const publicPaths = ['/login', '/auth/callback', '/auth/signout']
   const isPublic = publicPaths.some((p) => path.startsWith(p))
 
   // redirect 시 쿠키를 복사하는 헬퍼
@@ -63,15 +63,20 @@ export async function updateSession(request: NextRequest) {
       .eq('email', authUser.email)
       .single()
 
-    if (dbUser?.status === 'pending' && path !== '/pending') {
-      return redirectWithCookies('/pending')
-    }
-
-    if (dbUser?.status === 'banned') {
+    // DB에 사용자 레코드가 없으면 세션 정리 후 로그인으로
+    if (!dbUser) {
       return redirectWithCookies('/auth/signout')
     }
 
-    if (path.startsWith('/admin') && dbUser?.role !== 'admin') {
+    if (dbUser.status === 'pending' && path !== '/pending') {
+      return redirectWithCookies('/pending')
+    }
+
+    if (dbUser.status === 'banned') {
+      return redirectWithCookies('/auth/signout')
+    }
+
+    if (path.startsWith('/admin') && dbUser.role !== 'admin') {
       return redirectWithCookies('/')
     }
   }

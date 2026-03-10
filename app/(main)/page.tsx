@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { Header } from '@/components/layout/header'
@@ -6,10 +6,11 @@ import { FileText, FolderOpen, Upload, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function HomePage() {
+  // Middleware + layout already handle auth. Fallback to signout (not /login) to avoid loop.
   const user = await getAuthUser()
-  if (!user) redirect('/login')
+  if (!user) redirect('/auth/signout')
 
-  const supabase = await createClient()
+  const supabase = await createServiceClient()
 
   const [docsRes, catsRes, recentRes] = await Promise.all([
     supabase.from('documents').select('id', { count: 'exact', head: true }),

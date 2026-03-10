@@ -3,7 +3,7 @@ import { getAuthUser } from '@/lib/auth'
 
 export default async function PendingPage() {
   const user = await getAuthUser()
-  if (!user) redirect('/login')
+  if (!user) redirect('/auth/signout')
   if (user.status === 'active') redirect('/')
 
   return (
