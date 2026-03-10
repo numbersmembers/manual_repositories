@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAuth, requireAdmin } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
 
@@ -7,7 +7,7 @@ import { logActivity } from '@/lib/activity-log'
 export async function GET() {
   try {
     await requireAuth()
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const { data, error } = await supabase
       .from('categories')
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     // path 생성: 부모가 있으면 부모 경로에 추가
     let path = name

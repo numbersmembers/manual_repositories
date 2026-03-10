@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/auth'
 
 // DELETE /api/tags/[id] - 태그 삭제 (관리자 전용)
@@ -10,7 +10,7 @@ export async function DELETE(
   try {
     await requireAdmin()
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const { error } = await supabase
       .from('tags')

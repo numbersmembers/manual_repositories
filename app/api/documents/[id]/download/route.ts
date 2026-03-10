@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
 import { getSignedUrl } from '@/lib/supabase/storage'
@@ -12,7 +12,7 @@ export async function GET(
   try {
     const user = await requireAuth()
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const { data: doc } = await supabase
       .from('documents')

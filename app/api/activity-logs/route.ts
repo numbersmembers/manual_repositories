@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/auth'
 
 // GET /api/activity-logs - 활동 로그 조회 (관리자 전용)
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('user_id')
     const offset = (page - 1) * limit
 
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     let query = supabase
       .from('activity_logs')

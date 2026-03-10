@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAuth, requireAdmin } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
 import { deleteFile } from '@/lib/supabase/storage'
@@ -12,7 +12,7 @@ export async function GET(
   try {
     const user = await requireAuth()
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const { data, error } = await supabase
       .from('documents')
@@ -60,7 +60,7 @@ export async function DELETE(
   try {
     const admin = await requireAdmin()
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     // 먼저 문서 정보 조회
     const { data: doc } = await supabase

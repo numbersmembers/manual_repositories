@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth'
 
 // GET /api/comments?document_id=xxx - 문서별 댓글 조회
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'document_id is required' }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const { data, error } = await supabase
       .from('comments')
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const { data, error } = await supabase
       .from('comments')

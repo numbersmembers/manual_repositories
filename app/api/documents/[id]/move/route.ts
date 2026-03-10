@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
 
@@ -18,7 +18,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'category_id is required' }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const { data: doc } = await supabase
       .from('documents')

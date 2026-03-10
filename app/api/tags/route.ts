@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth'
 
 // GET /api/tags - 태그 목록 조회
 export async function GET() {
   try {
     await requireAuth()
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const { data, error } = await supabase
       .from('tags')
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const { data, error } = await supabase
       .from('tags')

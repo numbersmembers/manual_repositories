@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth'
 
 // DELETE /api/comments/[id] - 댓글 삭제 (본인 또는 관리자)
@@ -10,7 +10,7 @@ export async function DELETE(
   try {
     const user = await requireAuth()
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     // 본인 댓글인지 확인
     const { data: comment } = await supabase

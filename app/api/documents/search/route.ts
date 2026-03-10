@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth'
 
 // GET /api/documents/search?q=검색어&category_id=xxx&tags=tag1,tag2
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     // PostgreSQL FTS 함수 호출
     const { data, error } = await supabase.rpc('search_documents', {

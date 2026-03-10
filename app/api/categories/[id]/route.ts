@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
 
@@ -14,7 +14,7 @@ export async function PATCH(
     const body = await request.json()
     const { name, parent_id, sort_order } = body
 
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const updateData: Record<string, unknown> = {}
     if (name !== undefined) updateData.name = name
@@ -63,7 +63,7 @@ export async function DELETE(
   try {
     const admin = await requireAdmin()
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const { data: category } = await supabase
       .from('categories')

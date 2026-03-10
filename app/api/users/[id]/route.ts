@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
 
@@ -14,7 +14,7 @@ export async function PATCH(
     const body = await request.json()
     const { status, role } = body
 
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     const updateData: Record<string, string> = {}
     if (status) updateData.status = status

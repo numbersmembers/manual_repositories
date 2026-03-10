@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
 import { uploadFile, generateStoragePath } from '@/lib/supabase/storage'
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    const supabase = await createServiceClient()
 
     // 카테고리 경로 조회
     const { data: category } = await supabase
