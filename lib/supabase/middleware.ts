@@ -34,14 +34,14 @@ export async function updateSession(request: NextRequest) {
   const publicPaths = ['/login', '/auth/callback', '/auth/signout']
   const isPublic = publicPaths.some((p) => path.startsWith(p))
 
-  // redirect 시 쿠키를 복사하는 헬퍼
+  // redirect 시 쿠키를 복사하는 헬퍼 (옵션 포함)
   function redirectWithCookies(pathname: string) {
     const url = request.nextUrl.clone()
     url.pathname = pathname
     const redirectResponse = NextResponse.redirect(url)
-    // supabaseResponse에 설정된 쿠키를 redirect 응답에 복사
+    // supabaseResponse에 설정된 쿠키를 redirect 응답에 복사 (옵션 보존)
     supabaseResponse.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie.name, cookie.value)
+      redirectResponse.cookies.set(cookie)
     })
     return redirectResponse
   }

@@ -2,21 +2,29 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import type { User } from './types'
 
 export async function getAuthUser(): Promise<User | null> {
-  const supabase = await createClient()
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser()
+  try {
+    const supabase = await createClient()
 
-  if (!authUser?.email) return null
+    // Use getSession() instead of getUser() to avoid extra network call.
+    // Middleware already validates the token via getUser().
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-  const serviceClient = await createServiceClient()
-  const { data: dbUser } = await serviceClient
-    .from('users')
-    .select('*')
-    .eq('email', authUser.email)
-    .single()
+    const email = session?.user?.email
+    if (!email) return null
 
-  return dbUser ?? null
+    const serviceClient = await createServiceClient()
+    const { data: dbUser } = await serviceClient
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single()
+
+    return dbUser ?? null
+  } catch {
+    return null
+  }
 }
 
 export async function requireAuth(): Promise<User> {
