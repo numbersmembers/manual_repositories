@@ -44,3 +44,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
+
+// DELETE /api/activity-logs - 활동 로그 전체 삭제 (관리자 전용)
+export async function DELETE() {
+  try {
+    const supabase = createServiceClient()
+    const { error } = await supabase
+      .from('activity_logs')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000') // delete all rows
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ success: true })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
+}

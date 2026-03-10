@@ -19,7 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { formatDateTime } from '@/lib/utils'
 import type { ActivityLog } from '@/lib/types'
 
@@ -67,12 +68,29 @@ export default function AdminLogsPage() {
 
   const totalPages = Math.ceil(total / limit)
 
+  const handleDeleteAll = async () => {
+    if (!confirm('모든 활동 로그를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return
+    const res = await fetch('/api/activity-logs', { method: 'DELETE' })
+    if (res.ok) {
+      setLogs([])
+      setTotal(0)
+      toast.success('모든 활동 로그가 삭제되었습니다.')
+    } else {
+      toast.error('삭제에 실패했습니다.')
+    }
+  }
+
   return (
     <>
       <Header title="활동 로그" />
       <div className="flex-1 p-6">
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-muted-foreground">총 {total}건</p>
+          <div className="flex items-center gap-2">
+            <Button variant="destructive" size="sm" onClick={handleDeleteAll}>
+              <Trash2 className="h-4 w-4 mr-1" />
+              전체 삭제
+            </Button>
           <Select value={actionFilter} onValueChange={(v) => { setActionFilter(v); setPage(1) }}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="전체 활동" />
@@ -86,6 +104,7 @@ export default function AdminLogsPage() {
               ))}
             </SelectContent>
           </Select>
+          </div>
         </div>
 
         {loading ? (

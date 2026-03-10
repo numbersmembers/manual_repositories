@@ -93,8 +93,8 @@ export function AppSidebar({ user, categories }: AppSidebarProps) {
             className="rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.08)]"
           />
           <div className="flex flex-col">
-            <span className="text-sm font-bold tracking-tight">Manual Repo</span>
-            <span className="text-[11px] text-muted-foreground">Bloter/Numbers</span>
+            <span className="text-sm font-bold tracking-tight">Bloter/Numbers</span>
+            <span className="text-[11px] text-muted-foreground">Docu Box</span>
           </div>
         </Link>
       </SidebarHeader>
