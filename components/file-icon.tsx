@@ -70,7 +70,7 @@ export function FileIcon({
 }) {
   const ext = (
     fileExtension || fileName?.split('.').pop() || ''
-  ).toLowerCase()
+  ).toLowerCase().replace(/^\./, '')
 
   const mapping = iconMap[ext] || { icon: File, color: 'text-muted-foreground' }
   const Icon = mapping.icon

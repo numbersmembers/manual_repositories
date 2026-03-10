@@ -27,11 +27,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Also search by tag name
-    const { data: tagMatches } = await supabase
+    // Also search by tag name (with flexible space matching)
+    const noSpaceQ = q.replace(/\s+/g, '')
+    const noSpacePattern = `%${noSpaceQ}%`
+    const { data: allTags } = await supabase
       .from('tags')
       .select('id, name')
-      .ilike('name', pattern)
+
+    // Match tags where name contains query OR name without spaces contains query without spaces
+    const tagMatches = (allTags || []).filter((t) => {
+      const lower = t.name.toLowerCase()
+      const noSpaceName = lower.replace(/\s+/g, '')
+      return lower.includes(q.toLowerCase()) || noSpaceName.includes(noSpaceQ.toLowerCase())
+    })
 
     let tagDocIds: string[] = []
     if (tagMatches && tagMatches.length > 0) {

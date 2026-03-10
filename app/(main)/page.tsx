@@ -1,6 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server'
-import { getAuthUser } from '@/lib/auth'
 import { Header } from '@/components/layout/header'
+import { Greeting } from '@/components/greeting'
 import { RecentDocList } from '@/components/recent-doc-list'
 import { FileText, FolderOpen, Upload, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
@@ -8,9 +8,6 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  // Layout already handles auth — page just needs user data for display
-  const user = await getAuthUser()
-
   const supabase = createServiceClient()
 
   let docCount = 0
@@ -40,12 +37,7 @@ export default async function HomePage() {
       <Header title="대시보드" />
       <div className="flex-1 space-y-8 p-6">
         {/* 인사말 */}
-        <div>
-          <h2 className="text-3xl font-black tracking-tight">{user?.name ?? '사용자'}님, 환영합니다</h2>
-          <p className="mt-1 text-muted-foreground">
-            Bloter/Numbers 업무 매뉴얼 문서함
-          </p>
-        </div>
+        <Greeting />
 
         {/* 통계 카드 */}
         <div className="grid gap-4 md:grid-cols-3">
