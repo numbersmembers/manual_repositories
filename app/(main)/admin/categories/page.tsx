@@ -48,12 +48,13 @@ export default function AdminCategoriesPage() {
   const createCategory = async () => {
     if (!newName.trim()) return
 
+    const parentId = newParent && newParent !== 'none' ? newParent : null
     const res = await fetch('/api/categories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: newName.trim(),
-        parent_id: newParent || null,
+        parent_id: parentId,
       }),
     })
 
@@ -64,7 +65,8 @@ export default function AdminCategoriesPage() {
       setDialogOpen(false)
       fetchCategories()
     } else {
-      toast.error('생성에 실패했습니다.')
+      const data = await res.json().catch(() => null)
+      toast.error(data?.error || '생성에 실패했습니다.')
     }
   }
 

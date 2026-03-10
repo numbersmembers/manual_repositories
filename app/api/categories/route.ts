@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
   try {
     const admin = await requireAdmin()
     const body = await request.json()
-    const { name, parent_id, sort_order } = body
+    const { name, sort_order } = body
+    const parentId = body.parent_id && body.parent_id !== 'none' ? body.parent_id : null
 
     if (!name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
@@ -41,11 +42,11 @@ export async function POST(request: NextRequest) {
 
     // path 생성: 부모가 있으면 부모 경로에 추가
     let path = name
-    if (parent_id) {
+    if (parentId) {
       const { data: parent } = await supabase
         .from('categories')
         .select('path')
-        .eq('id', parent_id)
+        .eq('id', parentId)
         .single()
 
       if (parent) {
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       .from('categories')
       .insert({
         name,
-        parent_id: parent_id || null,
+        parent_id: parentId,
         path,
         sort_order: sort_order ?? 0,
       })
