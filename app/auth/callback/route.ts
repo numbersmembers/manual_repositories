@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
@@ -37,10 +37,7 @@ export async function GET(request: Request) {
 
     if (!error && data.user) {
       // DB 작업은 service role로 (RLS 우회)
-      const serviceClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      )
+      const serviceClient = createServiceClient()
 
       const email = data.user.email ?? ''
       const name =

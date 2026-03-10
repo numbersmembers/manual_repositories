@@ -18,16 +18,22 @@ export default async function MainLayout({
   if (user.status === 'pending') redirect('/pending')
   if (user.status === 'banned') redirect('/auth/signout')
 
-  const supabase = await createServiceClient()
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('*')
-    .order('sort_order')
-    .order('name')
+  let categories: Category[] = []
+  try {
+    const supabase = createServiceClient()
+    const { data } = await supabase
+      .from('categories')
+      .select('*')
+      .order('sort_order')
+      .order('name')
+    categories = (data || []) as Category[]
+  } catch {
+    // DB query failure should not crash the layout
+  }
 
   return (
     <SidebarProvider>
-      <AppSidebar user={user} categories={(categories || []) as Category[]} />
+      <AppSidebar user={user} categories={categories} />
       <SidebarInset>
         {children}
       </SidebarInset>

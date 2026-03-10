@@ -12,7 +12,7 @@ export async function getAuthUser(): Promise<User | null> {
     const email = session?.user?.email
     if (!email) return null
 
-    const serviceClient = await createServiceClient()
+    const serviceClient = createServiceClient()
     const { data: dbUser } = await serviceClient
       .from('users')
       .select('*')
