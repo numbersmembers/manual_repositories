@@ -27,14 +27,12 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import type { User, Category } from '@/lib/types'
-import { CategoryTree } from './category-tree'
+import type { User } from '@/lib/types'
 import { SearchCommand } from './search-command'
 import { cn } from '@/lib/utils'
 
 interface AppSidebarProps {
   user: User
-  categories: Category[]
 }
 
 const mainNav = [
@@ -84,7 +82,7 @@ function NavItem({
   )
 }
 
-export function AppSidebar({ user, categories }: AppSidebarProps) {
+export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname()
 
   return (
@@ -132,18 +130,6 @@ export function AppSidebar({ user, categories }: AppSidebarProps) {
                 />
               ))}
             </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator />
-
-        {/* 폴더 트리 */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
-            폴더
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <CategoryTree categories={categories} currentPath={pathname} />
           </SidebarGroupContent>
         </SidebarGroup>
 

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { UserProvider } from './user-provider'
 import { SidebarProvider, SidebarInset } from './ui/sidebar'
 import { AppSidebar } from './layout/app-sidebar'
-import type { User, Category } from '@/lib/types'
+import type { User } from '@/lib/types'
 
 function getStoredEmail(): string | null {
   if (typeof window === 'undefined') return null
@@ -14,11 +14,9 @@ function getStoredEmail(): string | null {
 
 export function AuthGate({
   serverUser,
-  categories,
   children,
 }: {
   serverUser: User | null
-  categories: Category[]
   children: React.ReactNode
 }) {
   const router = useRouter()
@@ -79,7 +77,7 @@ export function AuthGate({
   return (
     <UserProvider user={user}>
       <SidebarProvider>
-        <AppSidebar user={user} categories={categories} />
+        <AppSidebar user={user} />
         <SidebarInset>{children}</SidebarInset>
       </SidebarProvider>
     </UserProvider>
