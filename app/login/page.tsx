@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 
@@ -18,9 +19,13 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="w-full max-w-sm space-y-8 text-center">
         <div className="space-y-3">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground font-black text-lg">
-            MR
-          </div>
+          <Image
+            src="/favicon.png"
+            alt="Manual Repositories"
+            width={48}
+            height={48}
+            className="mx-auto rounded-lg"
+          />
           <h1 className="text-3xl font-black tracking-tight">
             Manual Repositories
           </h1>
