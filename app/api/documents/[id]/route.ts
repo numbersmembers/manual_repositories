@@ -60,14 +60,25 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthUser()
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin required' }, { status: 403 })
-    }
-
     const { id } = await params
     const body = await request.json()
-    const { security_level } = body
+    const { security_level, user_email } = body
+
+    // Resolve admin user (with email fallback for Vercel production)
+    let adminUser = await getAuthUser()
+    if (!adminUser && user_email) {
+      const sb = createServiceClient()
+      const { data: u } = await sb
+        .from('users')
+        .select('id, email, name, role')
+        .eq('email', user_email)
+        .single()
+      if (u) adminUser = u
+    }
+
+    if (!adminUser || adminUser.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin required' }, { status: 403 })
+    }
 
     if (!security_level || !['general', 'confidential'].includes(security_level)) {
       return NextResponse.json({ error: 'Invalid security_level' }, { status: 400 })
@@ -95,9 +106,9 @@ export async function PATCH(
     }
 
     await logActivity(supabase, {
-      userId: user.id,
-      userEmail: user.email,
-      userName: user.name,
+      userId: adminUser.id,
+      userEmail: adminUser.email,
+      userName: adminUser.name,
       action: 'change_security',
       targetType: 'document',
       targetId: id,

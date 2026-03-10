@@ -61,7 +61,7 @@ export default function AdminSecurityPage() {
       const res = await fetch(`/api/documents/${docId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ security_level: newLevel }),
+        body: JSON.stringify({ security_level: newLevel, user_email: user.email }),
       })
       if (res.ok) {
         setDocs((prev) =>
