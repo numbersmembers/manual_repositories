@@ -42,6 +42,7 @@ export default function DocumentsPage() {
     try {
       const params = new URLSearchParams()
       if (categoryId) params.set('category_id', categoryId)
+      params.set('user_email', user.email)
       const res = await fetch(`/api/documents?${params}`)
       if (res.ok) {
         const data = await res.json()
@@ -53,7 +54,7 @@ export default function DocumentsPage() {
     } finally {
       setLoading(false)
     }
-  }, [categoryId])
+  }, [categoryId, user.email])
 
   const fetchBookmarks = useCallback(async () => {
     try {
