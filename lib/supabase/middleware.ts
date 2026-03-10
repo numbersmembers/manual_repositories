@@ -1,6 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const PUBLIC_PATHS = ['/login', '/auth', '/pending', '/api/debug']
+
+function isPublicPath(pathname: string) {
+  return PUBLIC_PATHS.some((p) => pathname.startsWith(p))
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -26,7 +32,13 @@ export async function updateSession(request: NextRequest) {
       }
     )
 
-    await supabase.auth.getSession()
+    const { data: { session } } = await supabase.auth.getSession()
+
+    // Redirect to login if no session on protected routes
+    if (!session && !isPublicPath(request.nextUrl.pathname)) {
+      const loginUrl = new URL('/login', request.url)
+      return NextResponse.redirect(loginUrl)
+    }
   } catch {
     // Never crash the middleware — just pass through
   }

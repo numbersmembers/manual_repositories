@@ -1,14 +1,14 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/auth'
-import { redirect } from 'next/navigation'
 import { Header } from '@/components/layout/header'
 import { FileText, FolderOpen, Upload, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
-  // Layout handles auth redirect, but page needs user data for display
+  // Layout already handles auth — page just needs user data for display
   const user = await getAuthUser()
-  if (!user) redirect('/auth/signout')
 
   const supabase = createServiceClient()
 

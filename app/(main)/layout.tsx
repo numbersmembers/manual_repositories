@@ -1,9 +1,9 @@
-import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { SearchCommand } from '@/components/layout/search-command'
+import { AuthRedirect } from '@/components/auth-redirect'
 import type { Category } from '@/lib/types'
 
 export default async function MainLayout({
@@ -12,11 +12,13 @@ export default async function MainLayout({
   children: React.ReactNode
 }) {
   const user = await getAuthUser()
-  // Middleware already handles auth redirects.
-  // Only redirect to signout (not /login) to avoid redirect loop.
-  if (!user) redirect('/auth/signout')
-  if (user.status === 'pending') redirect('/pending')
-  if (user.status === 'banned') redirect('/auth/signout')
+
+  // Middleware handles session-level redirect to /login.
+  // Here we handle edge cases with client-side redirect to avoid
+  // server-side redirect errors during RSC streaming.
+  if (!user) return <AuthRedirect to="/auth/signout" />
+  if (user.status === 'pending') return <AuthRedirect to="/pending" />
+  if (user.status === 'banned') return <AuthRedirect to="/auth/signout" />
 
   let categories: Category[] = []
   try {
