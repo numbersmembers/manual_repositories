@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { FileText, Bookmark } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { formatDate } from '@/lib/utils'
+import { useUser } from '@/components/user-provider'
 
-interface BookmarkItem {
+type BookmarkItem = {
   id: string
   document_id: string
   created_at: string
@@ -21,16 +22,19 @@ interface BookmarkItem {
 }
 
 export default function BookmarksPage() {
+  const user = useUser()
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/bookmarks')
+    fetch(`/api/bookmarks?user_email=${encodeURIComponent(user.email)}`)
       .then((r) => r.json())
-      .then(setBookmarks)
+      .then((data) => {
+        if (Array.isArray(data)) setBookmarks(data)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [user.email])
 
   return (
     <>

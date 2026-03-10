@@ -9,6 +9,7 @@ import {
   Grid3X3,
   List,
   Bookmark,
+  BookmarkCheck,
   Shield,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
@@ -27,6 +28,7 @@ export default function DocumentsPage() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set())
 
   const fetchDocuments = useCallback(async () => {
     setLoading(true)
@@ -40,15 +42,35 @@ export default function DocumentsPage() {
         setTotal(data.total)
       }
     } catch {
-      // 에러 무시
+      // ignore
     } finally {
       setLoading(false)
     }
   }, [categoryId])
 
+  // Fetch bookmarked document IDs
+  const fetchBookmarks = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `/api/bookmarks?user_email=${encodeURIComponent(user.email)}`
+      )
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data)) {
+          setBookmarkedIds(
+            new Set(data.map((bm: { document_id: string }) => bm.document_id))
+          )
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [user.email])
+
   useEffect(() => {
     fetchDocuments()
-  }, [fetchDocuments])
+    fetchBookmarks()
+  }, [fetchDocuments, fetchBookmarks])
 
   const toggleBookmark = async (docId: string, e: React.MouseEvent) => {
     e.preventDefault()
@@ -61,6 +83,15 @@ export default function DocumentsPage() {
       })
       if (res.ok) {
         const data = await res.json()
+        setBookmarkedIds((prev) => {
+          const next = new Set(prev)
+          if (data.bookmarked) {
+            next.add(docId)
+          } else {
+            next.delete(docId)
+          }
+          return next
+        })
         toast.success(data.bookmarked ? '북마크 추가됨' : '북마크 제거됨')
       } else {
         toast.error('북마크 처리에 실패했습니다.')
@@ -105,57 +136,64 @@ export default function DocumentsPage() {
           </div>
         ) : viewMode === 'list' ? (
           <div className="space-y-2">
-            {documents.map((doc) => (
-              <Link
-                key={doc.id}
-                href={`/documents/${doc.id}`}
-                className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors"
-              >
-                <FileText className="h-8 w-8 text-muted-foreground shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium truncate">{doc.title}</p>
-                    {doc.security_level === 'confidential' && (
-                      <Badge variant="destructive" className="shrink-0 text-xs">
-                        <Shield className="h-3 w-3 mr-1" />
-                        대외비
-                      </Badge>
+            {documents.map((doc) => {
+              const isBookmarked = bookmarkedIds.has(doc.id)
+              return (
+                <Link
+                  key={doc.id}
+                  href={`/documents/${doc.id}`}
+                  className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors"
+                >
+                  <FileText className="h-8 w-8 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium truncate">{doc.title}</p>
+                      {doc.security_level === 'confidential' && (
+                        <Badge variant="destructive" className="shrink-0 text-xs">
+                          <Shield className="h-3 w-3 mr-1" />
+                          대외비
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {doc.file_name} · {doc.author_name} ·{' '}
+                      {formatDate(doc.created_at)}
+                      {doc.file_size && ` · ${formatFileSize(doc.file_size)}`}
+                    </p>
+                    {doc.tags && doc.tags.length > 0 && (
+                      <div className="flex gap-1 mt-1">
+                        {doc.tags.map((tag) => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {doc.file_name} · {doc.author_name} ·{' '}
-                    {formatDate(doc.created_at)}
-                    {doc.file_size && ` · ${formatFileSize(doc.file_size)}`}
-                  </p>
-                  {doc.tags && doc.tags.length > 0 && (
-                    <div className="flex gap-1 mt-1">
-                      {doc.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => toggleBookmark(doc.id, e)}
-                  >
-                    <Bookmark className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" asChild>
-                    <a
-                      href={`/api/documents/${doc.id}/download?user_email=${encodeURIComponent(user.email)}`}
-                      onClick={(e) => e.stopPropagation()}
+                  <div className="flex gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => toggleBookmark(doc.id, e)}
                     >
-                      <Download className="h-4 w-4" />
-                    </a>
-                  </Button>
-                </div>
-              </Link>
-            ))}
+                      {isBookmarked ? (
+                        <BookmarkCheck className="h-4 w-4 fill-current" />
+                      ) : (
+                        <Bookmark className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button variant="ghost" size="icon" asChild>
+                      <a
+                        href={`/api/documents/${doc.id}/download?user_email=${encodeURIComponent(user.email)}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Download className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

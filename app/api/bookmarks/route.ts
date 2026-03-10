@@ -3,9 +3,22 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/auth'
 
 // GET /api/bookmarks - 내 북마크 목록
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthUser()
+    let user = await getAuthUser()
+
+    // Fallback: look up user by email if cookie auth fails
+    const userEmail = request.nextUrl.searchParams.get('user_email')
+    if (!user && userEmail) {
+      const supabase = createServiceClient()
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', userEmail)
+        .single()
+      user = data
+    }
+
     if (!user) {
       return NextResponse.json([], { status: 200 })
     }

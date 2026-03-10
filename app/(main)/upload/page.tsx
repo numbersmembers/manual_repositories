@@ -166,14 +166,23 @@ export default function UploadPage() {
                 <SelectValue placeholder="카테고리 선택" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    <div className="flex items-center gap-2">
-                      <FolderOpen className="h-4 w-4" />
-                      {cat.path}
-                    </div>
-                  </SelectItem>
-                ))}
+                {categories
+                  .filter((c) => !c.parent_id)
+                  .map((parent) => {
+                    const children = categories.filter(
+                      (c) => c.parent_id === parent.id
+                    )
+                    return [parent, ...children]
+                  })
+                  .flat()
+                  .map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <div className="flex items-center gap-2">
+                        <FolderOpen className="h-4 w-4" />
+                        {cat.parent_id ? `└ ${cat.name}` : cat.name}
+                      </div>
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
