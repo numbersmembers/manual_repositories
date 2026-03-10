@@ -12,7 +12,6 @@ import {
   Activity,
   FolderTree,
   LogOut,
-  Search,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -29,6 +28,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { User, Category } from '@/lib/types'
 import { CategoryTree } from './category-tree'
+import { SearchCommand } from './search-command'
 import { cn } from '@/lib/utils'
 
 interface AppSidebarProps {
@@ -103,24 +103,7 @@ export function AppSidebar({ user, categories }: AppSidebarProps) {
         {/* 검색 */}
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <button
-                  onClick={() => {
-                    document.dispatchEvent(
-                      new KeyboardEvent('keydown', { key: 'k', metaKey: true })
-                    )
-                  }}
-                  className="flex w-full items-center gap-3 rounded-lg border border-border bg-accent/50 px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-accent hover:shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
-                >
-                  <Search className="h-4 w-4" />
-                  <span>검색</span>
-                  <kbd className="ml-auto pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
-                    ⌘K
-                  </kbd>
-                </button>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            <SearchCommand />
           </SidebarGroupContent>
         </SidebarGroup>
 

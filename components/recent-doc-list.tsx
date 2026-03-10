@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { FileText, Bookmark, BookmarkCheck } from 'lucide-react'
+import { FileIcon } from '@/components/file-icon'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useUser } from '@/components/user-provider'
@@ -92,7 +93,7 @@ export function RecentDocList({ docs }: { docs: RecentDoc[] }) {
           >
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
-                <FileText className="h-4 w-4 text-muted-foreground" />
+                <FileIcon fileName={doc.file_name} className="h-4 w-4" />
               </div>
               <div>
                 <p className="text-sm font-bold tracking-tight">{doc.title}</p>

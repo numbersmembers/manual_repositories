@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { UserProvider } from './user-provider'
 import { SidebarProvider, SidebarInset } from './ui/sidebar'
 import { AppSidebar } from './layout/app-sidebar'
-import { SearchCommand } from './layout/search-command'
 import type { User, Category } from '@/lib/types'
 
 function getStoredEmail(): string | null {
@@ -82,7 +81,6 @@ export function AuthGate({
       <SidebarProvider>
         <AppSidebar user={user} categories={categories} />
         <SidebarInset>{children}</SidebarInset>
-        <SearchCommand />
       </SidebarProvider>
     </UserProvider>
   )

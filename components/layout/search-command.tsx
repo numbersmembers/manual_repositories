@@ -1,36 +1,41 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  FileText,
-  Search,
-} from 'lucide-react'
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
+import { Search, X } from 'lucide-react'
+import { FileIcon } from '@/components/file-icon'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import type { Document } from '@/lib/types'
 
 export function SearchCommand() {
-  const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Document[]>([])
   const [loading, setLoading] = useState(false)
+  const [showResults, setShowResults] = useState(false)
   const router = useRouter()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
+  // Close results when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowResults(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Keyboard shortcut
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        setOpen((prev) => !prev)
+        inputRef.current?.focus()
       }
     }
-
     document.addEventListener('keydown', down)
     return () => document.removeEventListener('keydown', down)
   }, [])
@@ -46,10 +51,10 @@ export function SearchCommand() {
       const res = await fetch(`/api/documents/search?q=${encodeURIComponent(q)}&limit=10`)
       if (res.ok) {
         const data = await res.json()
-        setResults(data)
+        setResults(Array.isArray(data) ? data : [])
       }
     } catch {
-      // 검색 실패 무시
+      // ignore
     } finally {
       setLoading(false)
     }
@@ -62,40 +67,86 @@ export function SearchCommand() {
     return () => clearTimeout(timer)
   }, [query, search])
 
+  const handleSelect = (docId: string) => {
+    setShowResults(false)
+    setQuery('')
+    router.push(`/documents/${docId}`)
+  }
+
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput
-        placeholder="문서 검색... (제목, 파일명, 작성자)"
-        value={query}
-        onValueChange={setQuery}
-      />
-      <CommandList>
-        <CommandEmpty>
-          {loading ? '검색 중...' : '검색 결과가 없습니다.'}
-        </CommandEmpty>
-        {results.length > 0 && (
-          <CommandGroup heading="문서">
-            {results.map((doc) => (
-              <CommandItem
-                key={doc.id}
-                value={doc.title}
-                onSelect={() => {
-                  setOpen(false)
-                  router.push(`/documents/${doc.id}`)
-                }}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                <div className="flex flex-col">
-                  <span>{doc.title}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {doc.file_name} · {doc.author_name}
-                  </span>
-                </div>
-              </CommandItem>
-            ))}
-          </CommandGroup>
+    <div ref={containerRef} className="relative">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          ref={inputRef}
+          placeholder="검색 (제목, 태그, 작성자)"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setShowResults(true)
+          }}
+          onFocus={() => query.trim() && setShowResults(true)}
+          className="pl-9 pr-8 h-9 text-sm"
+        />
+        {query && (
+          <button
+            onClick={() => {
+              setQuery('')
+              setResults([])
+              setShowResults(false)
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
         )}
-      </CommandList>
-    </CommandDialog>
+      </div>
+
+      {/* Search results dropdown */}
+      {showResults && query.trim() && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-80 overflow-y-auto rounded-lg border bg-popover shadow-lg">
+          {loading ? (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              검색 중...
+            </div>
+          ) : results.length === 0 ? (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              검색 결과가 없습니다
+            </div>
+          ) : (
+            <div className="py-1">
+              {results.map((doc) => (
+                <button
+                  key={doc.id}
+                  onClick={() => handleSelect(doc.id)}
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-accent transition-colors"
+                >
+                  <FileIcon
+                    fileName={doc.file_name}
+                    fileExtension={doc.file_extension}
+                    className="h-5 w-5 shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{doc.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {doc.file_name} · {doc.author_name}
+                    </p>
+                    {doc.tags && doc.tags.length > 0 && (
+                      <div className="flex gap-1 mt-0.5">
+                        {doc.tags.slice(0, 3).map((tag) => (
+                          <Badge key={tag} variant="outline" className="text-[10px] px-1 py-0">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }

@@ -2,7 +2,6 @@ import { getAuthUser } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
-import { SearchCommand } from '@/components/layout/search-command'
 import { AuthRedirect } from '@/components/auth-redirect'
 import { UserProvider } from '@/components/user-provider'
 import { AuthGate } from '@/components/auth-gate'
@@ -50,7 +49,6 @@ export default async function MainLayout({
       <SidebarProvider>
         <AppSidebar user={user} categories={categories} />
         <SidebarInset>{children}</SidebarInset>
-        <SearchCommand />
       </SidebarProvider>
     </UserProvider>
   )
