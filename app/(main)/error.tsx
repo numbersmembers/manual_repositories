@@ -1,5 +1,7 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
+
 export default function MainError({
   error,
   reset,
@@ -7,6 +9,8 @@ export default function MainError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const pathname = usePathname()
+
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center p-8">
@@ -15,6 +19,7 @@ export default function MainError({
           페이지를 불러오는 중 오류가 발생했습니다.
         </p>
         <p className="text-xs text-red-500 mb-4 font-mono break-all max-w-md mx-auto">
+          Page: {pathname}<br />
           {error.message}
           {error.digest ? ` (digest: ${error.digest})` : ''}
         </p>

@@ -6,7 +6,7 @@ import { FileText, FolderOpen, Upload, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function HomePage() {
-  // Middleware + layout already handle auth. Fallback to signout (not /login) to avoid loop.
+  // Layout handles auth redirect, but page needs user data for display
   const user = await getAuthUser()
   if (!user) redirect('/auth/signout')
 
@@ -40,7 +40,7 @@ export default async function HomePage() {
       <div className="flex-1 space-y-8 p-6">
         {/* 인사말 */}
         <div>
-          <h2 className="text-3xl font-black tracking-tight">{user.name}님, 환영합니다</h2>
+          <h2 className="text-3xl font-black tracking-tight">{user?.name ?? '사용자'}님, 환영합니다</h2>
           <p className="mt-1 text-muted-foreground">
             Bloter/Numbers 업무 매뉴얼 문서함
           </p>
