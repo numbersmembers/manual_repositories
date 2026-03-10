@@ -36,7 +36,7 @@ export default function LoginPage() {
         <div className="space-y-3">
           <Button
             onClick={handleGoogleLogin}
-            className="w-full shadow-[0_4px_0_0_hsl(var(--primary)/0.4)] hover:shadow-[0_2px_0_0_hsl(var(--primary)/0.4)] hover:translate-y-[2px] active:shadow-none active:translate-y-[4px] transition-all duration-100"
+            className="w-full border-2 border-black font-bold shadow-[3px_3px_0_0_#000] hover:shadow-[1px_1px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-100"
             size="lg"
           >
             Google 계정으로 로그인

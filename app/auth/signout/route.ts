@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   try {
     const user = await getAuthUser()
     if (user) {
-      const serviceClient = await createServiceClient()
+      const serviceClient = createServiceClient()
       await serviceClient.from('activity_logs').insert({
         user_id: user.id,
         user_email: user.email,
@@ -26,5 +26,14 @@ export async function GET(request: Request) {
   }
 
   await supabase.auth.signOut()
-  return NextResponse.redirect(`${origin}/login`)
+
+  const response = NextResponse.redirect(`${origin}/login`)
+
+  // Clear our custom session cookie
+  response.cookies.set('mr_user_email', '', {
+    path: '/',
+    maxAge: 0,
+  })
+
+  return response
 }

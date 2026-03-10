@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-10T08:36:01.230Z",
+  "lastUpdated": "2026-03-10T08:46:43.010Z",
   "activeFeatures": [
     "v2-refactoring",
     "manual_repositories",
@@ -49,9 +49,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:24:01.198Z",
-        "lastUpdated": "2026-03-10T08:34:12.013Z"
+        "lastUpdated": "2026-03-10T08:46:18.556Z"
       },
-      "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\components\\auth-gate.tsx"
+      "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\components\\recent-doc-list.tsx"
     },
     "supabase": {
       "phase": "do",
@@ -75,7 +75,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:25:22.582Z",
-        "lastUpdated": "2026-03-10T02:29:54.261Z"
+        "lastUpdated": "2026-03-10T08:44:35.697Z"
       },
       "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\auth\\callback\\route.ts"
     },
@@ -88,7 +88,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:25:24.609Z",
-        "lastUpdated": "2026-03-10T00:45:54.821Z"
+        "lastUpdated": "2026-03-10T08:45:19.079Z"
       },
       "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\auth\\signout\\route.ts"
     },
@@ -101,7 +101,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:30:03.589Z",
-        "lastUpdated": "2026-03-10T08:23:20.761Z"
+        "lastUpdated": "2026-03-10T08:45:42.394Z"
       },
       "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\login\\page.tsx"
     },
@@ -166,9 +166,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:36:59.166Z",
-        "lastUpdated": "2026-03-09T15:50:54.946Z"
+        "lastUpdated": "2026-03-10T08:45:55.863Z"
       },
-      "lastFile": "c:\\Users\\user\\manual_repositories\\components\\ui\\card.tsx"
+      "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\components\\ui\\button.tsx"
     },
     "users": {
       "phase": "do",
@@ -322,9 +322,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:57:19.474Z",
-        "lastUpdated": "2026-03-10T08:34:23.733Z"
+        "lastUpdated": "2026-03-10T08:46:43.010Z"
       },
-      "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\(main)\\layout.tsx"
+      "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\(main)\\page.tsx"
     },
     "logs": {
       "phase": "do",
@@ -402,7 +402,7 @@
   "session": {
     "startedAt": "2026-03-09T12:13:02.129Z",
     "onboardingCompleted": true,
-    "lastActivity": "2026-03-10T08:36:01.230Z"
+    "lastActivity": "2026-03-10T08:46:43.010Z"
   },
   "history": [
     {
@@ -1734,6 +1734,60 @@
     {
       "timestamp": "2026-03-10T08:36:01.230Z",
       "feature": "upload",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T08:44:35.697Z",
+      "feature": "callback",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T08:45:06.642Z",
+      "feature": "manual_repositories",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T08:45:19.079Z",
+      "feature": "signout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T08:45:29.230Z",
+      "feature": "manual_repositories",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T08:45:42.394Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T08:45:55.863Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T08:46:18.556Z",
+      "feature": "manual_repositories",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T08:46:34.737Z",
+      "feature": "(main)",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T08:46:43.010Z",
+      "feature": "(main)",
       "phase": "do",
       "action": "updated"
     }

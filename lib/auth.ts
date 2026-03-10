@@ -1,15 +1,23 @@
+import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import type { User } from './types'
 
 export async function getAuthUser(): Promise<User | null> {
   try {
+    // Try Supabase session first
     const supabase = await createClient()
-
     const {
       data: { session },
     } = await supabase.auth.getSession()
 
-    const email = session?.user?.email
+    let email = session?.user?.email ?? null
+
+    // Fallback: read our custom cookie
+    if (!email) {
+      const cookieStore = await cookies()
+      email = cookieStore.get('mr_user_email')?.value ?? null
+    }
+
     if (!email) return null
 
     const serviceClient = createServiceClient()

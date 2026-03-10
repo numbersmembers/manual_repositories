@@ -70,6 +70,16 @@ export async function GET(request: Request) {
         })
       }
 
+      // Set our own reliable cookie for session persistence
+      // (Supabase SSR cookies may not work on all hosting platforms)
+      response.cookies.set('mr_user_email', email, {
+        path: '/',
+        httpOnly: false,
+        secure: requestUrl.protocol === 'https:',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      })
+
       // 로그인 로그
       const { data: dbUser } = await serviceClient
         .from('users')

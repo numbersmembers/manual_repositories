@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/auth'
 import { Header } from '@/components/layout/header'
+import { RecentDocList } from '@/components/recent-doc-list'
 import { FileText, FolderOpen, Upload, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -86,39 +87,7 @@ export default async function HomePage() {
         {/* 최근 문서 */}
         <div>
           <h3 className="mb-4 text-lg font-bold tracking-tight">최근 업로드 문서</h3>
-          {recentDocs.length === 0 ? (
-            <div className="rounded-lg border bg-card p-8 text-center">
-              <FileText className="mx-auto h-10 w-10 text-muted-foreground/40" />
-              <p className="mt-3 text-sm text-muted-foreground">
-                아직 업로드된 문서가 없습니다.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {recentDocs.map((doc) => (
-                <Link
-                  key={doc.id}
-                  href={`/documents/${doc.id}`}
-                  className="flex items-center justify-between rounded-lg border bg-card p-4 transition-all hover:shadow-[0_2px_4px_rgba(0,0,0,0.06)] hover:border-primary/20"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold tracking-tight">{doc.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {doc.author_name} · {doc.file_name}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {new Date(doc.created_at).toLocaleDateString('ko-KR')}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
+          <RecentDocList docs={recentDocs} />
         </div>
       </div>
     </>

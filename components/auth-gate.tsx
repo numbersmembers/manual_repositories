@@ -2,12 +2,19 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { UserProvider } from './user-provider'
 import { SidebarProvider, SidebarInset } from './ui/sidebar'
 import { AppSidebar } from './layout/app-sidebar'
 import { SearchCommand } from './layout/search-command'
 import type { User, Category } from '@/lib/types'
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith(`${name}=`))
+  return match ? decodeURIComponent(match.split('=')[1]) : null
+}
 
 export function AuthGate({
   serverUser,
@@ -27,18 +34,16 @@ export function AuthGate({
 
     async function clientAuth() {
       try {
-        const supabase = createClient()
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
+        // Read our custom cookie set during OAuth callback
+        const email = getCookie('mr_user_email')
 
-        if (!session?.user?.email) {
+        if (!email) {
           router.replace('/login')
           return
         }
 
         const res = await fetch(
-          `/api/users/me?email=${encodeURIComponent(session.user.email)}`
+          `/api/users/me?email=${encodeURIComponent(email)}`
         )
         if (res.ok) {
           const userData = await res.json()
