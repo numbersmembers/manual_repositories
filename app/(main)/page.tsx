@@ -10,21 +10,29 @@ export default async function HomePage() {
   const user = await getAuthUser()
   if (!user) redirect('/auth/signout')
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
-  const [docsRes, catsRes, recentRes] = await Promise.all([
-    supabase.from('documents').select('id', { count: 'exact', head: true }),
-    supabase.from('categories').select('id', { count: 'exact', head: true }),
-    supabase
-      .from('documents')
-      .select('id, title, file_name, file_type, author_name, created_at')
-      .order('created_at', { ascending: false })
-      .limit(5),
-  ])
+  let docCount = 0
+  let catCount = 0
+  let recentDocs: { id: string; title: string; file_name: string; file_type: string; author_name: string; created_at: string }[] = []
 
-  const docCount = docsRes.count ?? 0
-  const catCount = catsRes.count ?? 0
-  const recentDocs = recentRes.data ?? []
+  try {
+    const [docsRes, catsRes, recentRes] = await Promise.all([
+      supabase.from('documents').select('id', { count: 'exact', head: true }),
+      supabase.from('categories').select('id', { count: 'exact', head: true }),
+      supabase
+        .from('documents')
+        .select('id, title, file_name, file_type, author_name, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5),
+    ])
+
+    docCount = docsRes.count ?? 0
+    catCount = catsRes.count ?? 0
+    recentDocs = recentRes.data ?? []
+  } catch {
+    // DB query failure should not crash the page
+  }
 
   return (
     <>
