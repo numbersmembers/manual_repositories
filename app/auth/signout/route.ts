@@ -27,13 +27,8 @@ export async function GET(request: Request) {
 
   await supabase.auth.signOut()
 
-  const response = NextResponse.redirect(`${origin}/login`)
-
-  // Clear our custom session cookie
-  response.cookies.set('mr_user_email', '', {
-    path: '/',
-    maxAge: 0,
-  })
-
-  return response
+  // Redirect to login with clear flag to remove localStorage session
+  const loginUrl = new URL('/login', origin)
+  loginUrl.searchParams.set('cleared', '1')
+  return NextResponse.redirect(loginUrl.toString())
 }

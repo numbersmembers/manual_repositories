@@ -8,9 +8,9 @@ export async function GET(request: Request) {
   const next = requestUrl.searchParams.get('next') ?? '/'
 
   if (code) {
-    // redirect 응답을 먼저 생성하고, 쿠키를 이 응답에 직접 설정
-    const redirectUrl = `${requestUrl.origin}${next}`
-    const response = NextResponse.redirect(redirectUrl)
+    // Temporary response object for Supabase cookie handling during code exchange
+    const tempRedirectUrl = `${requestUrl.origin}${next}`
+    const response = NextResponse.redirect(tempRedirectUrl)
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -70,16 +70,6 @@ export async function GET(request: Request) {
         })
       }
 
-      // Set our own reliable cookie for session persistence
-      // (Supabase SSR cookies may not work on all hosting platforms)
-      response.cookies.set('mr_user_email', email, {
-        path: '/',
-        httpOnly: false,
-        secure: requestUrl.protocol === 'https:',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-      })
-
       // 로그인 로그
       const { data: dbUser } = await serviceClient
         .from('users')
@@ -99,7 +89,12 @@ export async function GET(request: Request) {
         })
       }
 
-      return response
+      // Redirect to client-side session page to store email in localStorage
+      // (cookies set on redirect responses do not persist on Vercel production)
+      const sessionUrl = new URL('/auth/session', requestUrl.origin)
+      sessionUrl.searchParams.set('email', email)
+      sessionUrl.searchParams.set('next', next)
+      return NextResponse.redirect(sessionUrl.toString())
     }
   }
 

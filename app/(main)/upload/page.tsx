@@ -166,23 +166,26 @@ export default function UploadPage() {
                 <SelectValue placeholder="카테고리 선택" />
               </SelectTrigger>
               <SelectContent>
-                {categories
-                  .filter((c) => !c.parent_id)
-                  .map((parent) => {
-                    const children = categories.filter(
-                      (c) => c.parent_id === parent.id
+                {(() => {
+                  // Recursive tree flattening for unlimited depth
+                  const flattenTree = (parentId: string | null, depth: number): { cat: Category; depth: number }[] => {
+                    const children = categories.filter((c) =>
+                      parentId === null ? !c.parent_id : c.parent_id === parentId
                     )
-                    return [parent, ...children]
-                  })
-                  .flat()
-                  .map((cat) => (
+                    return children.flatMap((child) => [
+                      { cat: child, depth },
+                      ...flattenTree(child.id, depth + 1),
+                    ])
+                  }
+                  return flattenTree(null, 0).map(({ cat, depth }) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       <div className="flex items-center gap-2">
                         <FolderOpen className="h-4 w-4" />
-                        {cat.parent_id ? `└ ${cat.name}` : cat.name}
+                        {depth > 0 ? `${'  '.repeat(depth - 1)}└ ${cat.name}` : cat.name}
                       </div>
                     </SelectItem>
-                  ))}
+                  ))
+                })()}
               </SelectContent>
             </Select>
           </div>

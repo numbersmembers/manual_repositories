@@ -1,8 +1,23 @@
 'use client'
 
+import { Suspense, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+
+function ClearSession() {
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Clear localStorage session on logout
+    if (searchParams.get('cleared') === '1') {
+      localStorage.removeItem('mr_user_email')
+    }
+  }, [searchParams])
+
+  return null
+}
 
 export default function LoginPage() {
   const handleGoogleLogin = async () => {
@@ -17,6 +32,9 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
+      <Suspense>
+        <ClearSession />
+      </Suspense>
       <div className="w-full max-w-sm space-y-8 text-center">
         <div className="space-y-3">
           <Image

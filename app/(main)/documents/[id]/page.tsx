@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Download,
   Bookmark,
+  BookmarkCheck,
   Trash2,
   Shield,
   FileText,
@@ -31,17 +32,25 @@ export default function DocumentDetailPage() {
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(true)
+  const [isBookmarked, setIsBookmarked] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [docRes, commentsRes] = await Promise.all([
+        const [docRes, commentsRes, bmRes] = await Promise.all([
           fetch(`/api/documents/${id}`),
           fetch(`/api/comments?document_id=${id}`),
+          fetch(`/api/bookmarks?user_email=${encodeURIComponent(user.email)}`),
         ])
 
         if (docRes.ok) setDoc(await docRes.json())
         if (commentsRes.ok) setComments(await commentsRes.json())
+        if (bmRes.ok) {
+          const bookmarks = await bmRes.json()
+          if (Array.isArray(bookmarks)) {
+            setIsBookmarked(bookmarks.some((bm: { document_id: string }) => bm.document_id === id))
+          }
+        }
       } catch {
         toast.error('문서를 불러올 수 없습니다.')
       } finally {
@@ -49,7 +58,7 @@ export default function DocumentDetailPage() {
       }
     }
     fetchData()
-  }, [id])
+  }, [id, user.email])
 
   const handleDelete = async () => {
     if (!confirm('정말 삭제하시겠습니까?')) return
@@ -70,6 +79,7 @@ export default function DocumentDetailPage() {
     })
     if (res.ok) {
       const data = await res.json()
+      setIsBookmarked(data.bookmarked)
       toast.success(data.bookmarked ? '북마크 추가됨' : '북마크 제거됨')
     }
   }
@@ -147,7 +157,11 @@ export default function DocumentDetailPage() {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleBookmark}>
-              <Bookmark className="h-4 w-4 mr-1" />
+              {isBookmarked ? (
+                <BookmarkCheck className="h-4 w-4 mr-1 fill-current" />
+              ) : (
+                <Bookmark className="h-4 w-4 mr-1" />
+              )}
               북마크
             </Button>
             <Button variant="outline" size="sm" asChild>

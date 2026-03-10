@@ -8,12 +8,9 @@ import { AppSidebar } from './layout/app-sidebar'
 import { SearchCommand } from './layout/search-command'
 import type { User, Category } from '@/lib/types'
 
-function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null
-  const match = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith(`${name}=`))
-  return match ? decodeURIComponent(match.split('=')[1]) : null
+function getStoredEmail(): string | null {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('mr_user_email')
 }
 
 export function AuthGate({
@@ -34,8 +31,8 @@ export function AuthGate({
 
     async function clientAuth() {
       try {
-        // Read our custom cookie set during OAuth callback
-        const email = getCookie('mr_user_email')
+        // Read email from localStorage (set during OAuth callback)
+        const email = getStoredEmail()
 
         if (!email) {
           router.replace('/login')

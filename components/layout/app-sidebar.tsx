@@ -65,11 +65,10 @@ function NavItem({
       <Link
         href={href}
         className={cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
-          'border border-transparent',
+          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold tracking-tight transition-all',
           isActive
-            ? 'bg-primary/10 text-primary border-primary/20 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06)]'
-            : 'text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border hover:shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+            ? 'bg-primary text-primary-foreground border-2 border-black shadow-[2px_2px_0_0_#000]'
+            : 'border-2 border-transparent text-muted-foreground hover:text-foreground hover:border-black hover:bg-accent hover:shadow-[2px_2px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:shadow-none active:translate-x-[1px] active:translate-y-[1px]'
         )}
       >
         <Icon className="h-4 w-4 shrink-0" />
