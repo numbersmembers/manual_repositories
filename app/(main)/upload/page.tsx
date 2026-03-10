@@ -31,6 +31,33 @@ interface UploadItem {
   error?: string
 }
 
+// Read all files recursively from FileSystemEntry (supports folder drops)
+function readEntriesRecursively(entries: FileSystemEntry[]): Promise<File[]> {
+  const files: File[] = []
+
+  function readEntry(entry: FileSystemEntry): Promise<void> {
+    return new Promise((resolve) => {
+      if (entry.isFile) {
+        ;(entry as FileSystemFileEntry).file((file) => {
+          // Skip hidden files
+          if (!file.name.startsWith('.')) files.push(file)
+          resolve()
+        }, () => resolve())
+      } else if (entry.isDirectory) {
+        const reader = (entry as FileSystemDirectoryEntry).createReader()
+        reader.readEntries(async (childEntries) => {
+          await Promise.all(childEntries.map(readEntry))
+          resolve()
+        }, () => resolve())
+      } else {
+        resolve()
+      }
+    })
+  }
+
+  return Promise.all(entries.map(readEntry)).then(() => files)
+}
+
 export default function UploadPage() {
   const router = useRouter()
   const user = useUser()
@@ -49,9 +76,11 @@ export default function UploadPage() {
       .catch(() => {})
   }, [])
 
-  const handleFiles = (files: FileList | null) => {
-    if (!files) return
-    const newItems: UploadItem[] = Array.from(files).map((file) => ({
+  const addFiles = (files: File[]) => {
+    // Filter out directories (size 0 with no extension) and hidden files
+    const validFiles = files.filter((f) => f.size > 0)
+    if (validFiles.length === 0) return
+    const newItems: UploadItem[] = validFiles.map((file) => ({
       file,
       title: file.name.replace(/\.[^/.]+$/, ''),
       tags: [],
@@ -61,8 +90,32 @@ export default function UploadPage() {
     setItems((prev) => [...prev, ...newItems])
   }
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return
+    addFiles(Array.from(files))
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
+
+    // Use DataTransfer items API to handle folder drops
+    const items = e.dataTransfer.items
+    if (items && items.length > 0) {
+      const entries: FileSystemEntry[] = []
+      for (let i = 0; i < items.length; i++) {
+        const entry = items[i].webkitGetAsEntry?.()
+        if (entry) entries.push(entry)
+      }
+
+      if (entries.some((entry) => entry.isDirectory)) {
+        // Recursively read all files from dropped folders
+        const allFiles = await readEntriesRecursively(entries)
+        addFiles(allFiles)
+        return
+      }
+    }
+
+    // Fallback for simple file drops
     handleFiles(e.dataTransfer.files)
   }
 
