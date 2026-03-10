@@ -14,6 +14,10 @@ export default function MainError({
         <p className="text-muted-foreground mb-6">
           페이지를 불러오는 중 오류가 발생했습니다.
         </p>
+        <p className="text-xs text-red-500 mb-4 font-mono break-all max-w-md mx-auto">
+          {error.message}
+          {error.digest ? ` (digest: ${error.digest})` : ''}
+        </p>
         <button
           onClick={() => reset()}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90"
