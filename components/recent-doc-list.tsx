@@ -13,13 +13,33 @@ type RecentDoc = {
   title: string
   file_name: string
   file_type: string
+  file_extension?: string | null
+  security_level?: string
   author_name: string
   created_at: string
 }
 
-export function RecentDocList({ docs }: { docs: RecentDoc[] }) {
+export function RecentDocList() {
   const user = useUser()
+  const [docs, setDocs] = useState<RecentDoc[]>([])
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
+
+  const fetchDocs = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `/api/documents?limit=5&user_email=${encodeURIComponent(user.email)}`
+      )
+      if (res.ok) {
+        const data = await res.json()
+        setDocs(data.documents || [])
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false)
+    }
+  }, [user.email])
 
   const fetchBookmarks = useCallback(async () => {
     try {
@@ -40,8 +60,9 @@ export function RecentDocList({ docs }: { docs: RecentDoc[] }) {
   }, [user.email])
 
   useEffect(() => {
+    fetchDocs()
     fetchBookmarks()
-  }, [fetchBookmarks])
+  }, [fetchDocs, fetchBookmarks])
 
   const toggleBookmark = async (docId: string, e: React.MouseEvent) => {
     e.preventDefault()
@@ -68,6 +89,14 @@ export function RecentDocList({ docs }: { docs: RecentDoc[] }) {
     } catch {
       // ignore
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="rounded-lg border bg-card p-8 text-center">
+        <p className="text-sm text-muted-foreground">불러오는 중...</p>
+      </div>
+    )
   }
 
   if (docs.length === 0) {

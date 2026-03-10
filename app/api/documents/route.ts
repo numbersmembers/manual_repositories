@@ -14,12 +14,26 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient()
 
+    // Resolve user role (fallback to email lookup for Vercel production)
+    let userRole = user?.role || 'staff'
+    if (!user) {
+      const email = searchParams.get('user_email')
+      if (email) {
+        const { data: u } = await supabase
+          .from('users')
+          .select('role')
+          .eq('email', email)
+          .single()
+        if (u) userRole = u.role
+      }
+    }
+
     let query = supabase
       .from('documents')
       .select('*, document_tags(tag_id, tags(name))', { count: 'exact' })
 
-    // staff는 일반 문서만
-    if (user?.role !== 'admin') {
+    // Staff can only see general documents
+    if (userRole !== 'admin') {
       query = query.eq('security_level', 'general')
     }
 

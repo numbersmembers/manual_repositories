@@ -12,22 +12,15 @@ export default async function HomePage() {
 
   let docCount = 0
   let catCount = 0
-  let recentDocs: { id: string; title: string; file_name: string; file_type: string; author_name: string; created_at: string }[] = []
 
   try {
-    const [docsRes, catsRes, recentRes] = await Promise.all([
+    const [docsRes, catsRes] = await Promise.all([
       supabase.from('documents').select('id', { count: 'exact', head: true }),
       supabase.from('categories').select('id', { count: 'exact', head: true }),
-      supabase
-        .from('documents')
-        .select('id, title, file_name, file_type, author_name, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5),
     ])
 
     docCount = docsRes.count ?? 0
     catCount = catsRes.count ?? 0
-    recentDocs = recentRes.data ?? []
   } catch {
     // DB query failure should not crash the page
   }
@@ -76,10 +69,10 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        {/* 최근 문서 */}
+        {/* 최근 문서 (role-based filtering via API) */}
         <div>
           <h3 className="mb-4 text-lg font-bold tracking-tight">최근 업로드 문서</h3>
-          <RecentDocList docs={recentDocs} />
+          <RecentDocList />
         </div>
       </div>
     </>

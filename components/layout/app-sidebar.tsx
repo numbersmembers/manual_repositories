@@ -11,6 +11,7 @@ import {
   Users,
   Activity,
   FolderTree,
+  Shield,
   LogOut,
 } from 'lucide-react'
 import {
@@ -45,6 +46,7 @@ const mainNav = [
 const adminNav = [
   { title: '사용자 관리', href: '/admin/users', icon: Users },
   { title: '카테고리 관리', href: '/admin/categories', icon: FolderTree },
+  { title: '보안등급 관리', href: '/admin/security', icon: Shield },
   { title: '활동 로그', href: '/admin/logs', icon: Activity },
 ]
 

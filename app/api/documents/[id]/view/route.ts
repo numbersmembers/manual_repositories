@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getAuthUser } from '@/lib/auth'
 import { getSignedUrl } from '@/lib/supabase/storage'
 
 // GET /api/documents/[id]/view - inline preview (no Content-Disposition: attachment)
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -19,6 +20,27 @@ export async function GET(
 
     if (!doc) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+    }
+
+    // Security check
+    let userRole = 'staff'
+    const user = await getAuthUser()
+    if (user) {
+      userRole = user.role
+    } else {
+      const email = request.nextUrl.searchParams.get('user_email')
+      if (email) {
+        const { data: u } = await supabase
+          .from('users')
+          .select('role')
+          .eq('email', email)
+          .single()
+        if (u) userRole = u.role
+      }
+    }
+
+    if (userRole !== 'admin' && doc.security_level === 'confidential') {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
     const signedUrl = await getSignedUrl(supabase, doc.storage_path, 300)

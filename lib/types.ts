@@ -73,6 +73,7 @@ export type ActivityAction =
   | 'approve_user'
   | 'ban_user'
   | 'change_role'
+  | 'change_security'
 
 export interface ActivityLog {
   id: string

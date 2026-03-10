@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getAuthUser } from '@/lib/auth'
 
-// GET /api/documents/search?q=검색어&limit=10
+// GET /api/documents/search?q=검색어&limit=10&user_email=xxx
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -14,12 +15,36 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient()
 
+    // Resolve user role for security filtering
+    let userRole = 'staff'
+    const user = await getAuthUser()
+    if (user) {
+      userRole = user.role
+    } else {
+      const email = searchParams.get('user_email')
+      if (email) {
+        const { data: u } = await supabase
+          .from('users')
+          .select('role')
+          .eq('email', email)
+          .single()
+        if (u) userRole = u.role
+      }
+    }
+
     // Search documents by title, file_name, author_name using ILIKE
     const pattern = `%${q}%`
-    const { data: docs, error } = await supabase
+    let query = supabase
       .from('documents')
       .select('*, document_tags(tag_id, tags(name))')
       .or(`title.ilike.${pattern},file_name.ilike.${pattern},author_name.ilike.${pattern}`)
+
+    // Staff can only see general documents
+    if (userRole !== 'admin') {
+      query = query.eq('security_level', 'general')
+    }
+
+    const { data: docs, error } = await query
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -60,10 +85,14 @@ export async function GET(request: NextRequest) {
 
     let tagDocs: typeof docs = []
     if (missingTagDocIds.length > 0) {
-      const { data } = await supabase
+      let tagQuery = supabase
         .from('documents')
         .select('*, document_tags(tag_id, tags(name))')
         .in('id', missingTagDocIds)
+      if (userRole !== 'admin') {
+        tagQuery = tagQuery.eq('security_level', 'general')
+      }
+      const { data } = await tagQuery
         .order('created_at', { ascending: false })
         .limit(limit)
       tagDocs = data || []

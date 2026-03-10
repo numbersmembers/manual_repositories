@@ -54,6 +54,64 @@ export async function GET(
   }
 }
 
+// PATCH /api/documents/[id] - 보안등급 변경 (관리자 전용)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthUser()
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin required' }, { status: 403 })
+    }
+
+    const { id } = await params
+    const body = await request.json()
+    const { security_level } = body
+
+    if (!security_level || !['general', 'confidential'].includes(security_level)) {
+      return NextResponse.json({ error: 'Invalid security_level' }, { status: 400 })
+    }
+
+    const supabase = createServiceClient()
+
+    const { data: doc } = await supabase
+      .from('documents')
+      .select('title, security_level')
+      .eq('id', id)
+      .single()
+
+    if (!doc) {
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+    }
+
+    const { error } = await supabase
+      .from('documents')
+      .update({ security_level })
+      .eq('id', id)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    await logActivity(supabase, {
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.name,
+      action: 'change_security',
+      targetType: 'document',
+      targetId: id,
+      targetName: doc.title,
+      metadata: { from: doc.security_level, to: security_level },
+    })
+
+    return NextResponse.json({ success: true, security_level })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
+}
+
 // DELETE /api/documents/[id] - 문서 삭제 (관리자 전용)
 export async function DELETE(
   _request: NextRequest,
