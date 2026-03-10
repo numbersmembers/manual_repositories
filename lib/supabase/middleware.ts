@@ -25,10 +25,13 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Refresh session token. Do NOT remove this call.
+  // Use getSession() to refresh tokens without a network validation call.
+  // getUser() makes a network call to Supabase Auth on EVERY request,
+  // which can fail due to transient errors and cause false redirects.
+  // Layout and API routes provide additional auth validation.
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
 
   const path = request.nextUrl.pathname
   const isPublic =
@@ -36,13 +39,13 @@ export async function updateSession(request: NextRequest) {
     path.startsWith('/auth/') ||
     path === '/pending'
 
-  if (!user && !isPublic) {
+  if (!session && !isPublic) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && path === '/login') {
+  if (session && path === '/login') {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)
