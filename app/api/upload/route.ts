@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
     const categoryId = formData.get('category_id') as string
     const securityLevel = (formData.get('security_level') as string) || 'general'
     const tagsJson = formData.get('tags') as string
+    const userEmail = formData.get('user_email') as string
 
     if (!file || !title || !categoryId) {
       return NextResponse.json(
@@ -25,6 +26,24 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient()
+
+    // Look up user from DB by email (cookies not available in production)
+    let dbUser = user
+    if (!dbUser && userEmail) {
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', userEmail)
+        .single()
+      dbUser = data
+    }
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { error: 'User not found. Please sign in again.' },
+        { status: 401 }
+      )
+    }
 
     // 카테고리 경로 조회
     const { data: category } = await supabase
@@ -64,8 +83,8 @@ export async function POST(request: NextRequest) {
         file_size: file.size,
         security_level: securityLevel,
         category_id: categoryId,
-        author_id: user?.id ?? null,
-        author_name: user?.name ?? 'Unknown',
+        author_id: dbUser.id,
+        author_name: dbUser.name ?? 'Unknown',
       })
       .select()
       .single()
@@ -99,11 +118,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 활동 로그
-    if (user) {
+    if (dbUser) {
       await logActivity(supabase, {
-        userId: user.id,
-        userEmail: user.email,
-        userName: user.name,
+        userId: dbUser.id,
+        userEmail: dbUser.email,
+        userName: dbUser.name,
         action: 'upload',
         targetType: 'document',
         targetId: doc.id,

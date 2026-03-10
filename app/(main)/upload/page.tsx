@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { toast } from 'sonner'
 import { formatFileSize } from '@/lib/utils'
+import { useUser } from '@/components/user-provider'
 import type { Category } from '@/lib/types'
 
 interface UploadItem {
@@ -32,6 +33,7 @@ interface UploadItem {
 
 export default function UploadPage() {
   const router = useRouter()
+  const user = useUser()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('')
@@ -119,6 +121,7 @@ export default function UploadPage() {
       formData.append('title', items[i].title)
       formData.append('category_id', selectedCategory)
       formData.append('security_level', securityLevel)
+      formData.append('user_email', user.email)
       if (items[i].tags.length > 0) {
         formData.append('tags', JSON.stringify(items[i].tags))
       }

@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { SearchCommand } from '@/components/layout/search-command'
 import { AuthRedirect } from '@/components/auth-redirect'
+import { UserProvider } from '@/components/user-provider'
 import type { Category } from '@/lib/types'
 
 export default async function MainLayout({
@@ -34,12 +35,14 @@ export default async function MainLayout({
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar user={user} categories={categories} />
-      <SidebarInset>
-        {children}
-      </SidebarInset>
-      <SearchCommand />
-    </SidebarProvider>
+    <UserProvider user={user}>
+      <SidebarProvider>
+        <AppSidebar user={user} categories={categories} />
+        <SidebarInset>
+          {children}
+        </SidebarInset>
+        <SearchCommand />
+      </SidebarProvider>
+    </UserProvider>
   )
 }
