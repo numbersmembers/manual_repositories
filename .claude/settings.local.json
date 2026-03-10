@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const p = require\\(''./node_modules/next/package.json''\\); console.log\\(''Next.js:'', p.version\\)\")",
+      "Bash(./node_modules/.bin/next build)",
+      "Bash(npx vercel logs manual-repositories.vercel.app --limit 20)",
+      "Bash(node -e \"console.log\\(require\\(''./package.json''\\).dependencies.next\\)\")",
+      "Bash(npx tsc --noEmit --pretty)"
+    ]
+  }
+}

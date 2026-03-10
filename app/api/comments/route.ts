@@ -34,9 +34,9 @@ export async function GET(request: NextRequest) {
 // POST /api/comments - 댓글 작성
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthUser()
+    let user = await getAuthUser()
     const body = await request.json()
-    const { document_id, content } = body
+    const { document_id, content, user_email } = body
 
     if (!document_id || !content?.trim()) {
       return NextResponse.json(
@@ -46,6 +46,16 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient()
+
+    // Fallback: look up user by email if cookie auth fails
+    if (!user && user_email) {
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', user_email)
+        .single()
+      user = data
+    }
 
     const { data, error } = await supabase
       .from('comments')

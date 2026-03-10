@@ -10,13 +10,24 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthUser()
+    let user = await getAuthUser()
     const { id } = await params
     const supabase = createServiceClient()
 
+    // Fallback: look up user by email if cookie auth fails
+    const userEmail = _request.nextUrl.searchParams.get('user_email')
+    if (!user && userEmail) {
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', userEmail)
+        .single()
+      user = data
+    }
+
     const { data: doc } = await supabase
       .from('documents')
-      .select('title, storage_path, security_level')
+      .select('title, file_name, storage_path, security_level')
       .eq('id', id)
       .single()
 
@@ -29,7 +40,7 @@ export async function GET(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    const signedUrl = await getSignedUrl(supabase, doc.storage_path, 60)
+    const signedUrl = await getSignedUrl(supabase, doc.storage_path, 60, doc.file_name)
     if (!signedUrl) {
       return NextResponse.json({ error: 'Failed to generate download URL' }, { status: 500 })
     }

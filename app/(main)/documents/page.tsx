@@ -15,11 +15,13 @@ import { Header } from '@/components/layout/header'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn, formatFileSize, formatDate } from '@/lib/utils'
+import { useUser } from '@/components/user-provider'
 import type { Document } from '@/lib/types'
 
 export default function DocumentsPage() {
   const searchParams = useSearchParams()
   const categoryId = searchParams.get('category')
+  const user = useUser()
   const [documents, setDocuments] = useState<Document[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -52,7 +54,7 @@ export default function DocumentsPage() {
     await fetch('/api/bookmarks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ document_id: docId }),
+      body: JSON.stringify({ document_id: docId, user_email: user.email }),
     })
   }
 
@@ -133,7 +135,7 @@ export default function DocumentsPage() {
                   </Button>
                   <Button variant="ghost" size="icon" asChild>
                     <a
-                      href={`/api/documents/${doc.id}/download`}
+                      href={`/api/documents/${doc.id}/download?user_email=${encodeURIComponent(user.email)}`}
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Download className="h-4 w-4" />

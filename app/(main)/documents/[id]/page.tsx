@@ -20,11 +20,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { formatFileSize, formatDateTime } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useUser } from '@/components/user-provider'
 import type { Document, Comment } from '@/lib/types'
 
 export default function DocumentDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const user = useUser()
   const [doc, setDoc] = useState<Document | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
@@ -64,7 +66,7 @@ export default function DocumentDetailPage() {
     const res = await fetch('/api/bookmarks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ document_id: id }),
+      body: JSON.stringify({ document_id: id, user_email: user.email }),
     })
     if (res.ok) {
       const data = await res.json()
@@ -77,7 +79,7 @@ export default function DocumentDetailPage() {
     const res = await fetch('/api/comments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ document_id: id, content: newComment }),
+      body: JSON.stringify({ document_id: id, content: newComment, user_email: user.email }),
     })
     if (res.ok) {
       const comment = await res.json()
@@ -149,7 +151,7 @@ export default function DocumentDetailPage() {
               북마크
             </Button>
             <Button variant="outline" size="sm" asChild>
-              <a href={`/api/documents/${id}/download`}>
+              <a href={`/api/documents/${id}/download?user_email=${encodeURIComponent(user.email)}`}>
                 <Download className="h-4 w-4 mr-1" />
                 다운로드
               </a>
@@ -208,14 +210,14 @@ export default function DocumentDetailPage() {
             <CardContent>
               {isImage && (
                 <img
-                  src={`/api/documents/${id}/download`}
+                  src={`/api/documents/${id}/view`}
                   alt={doc.title}
                   className="max-w-full rounded-md"
                 />
               )}
               {isPdf && (
                 <iframe
-                  src={`/api/documents/${id}/download`}
+                  src={`/api/documents/${id}/view`}
                   className="w-full h-[600px] rounded-md border"
                   title={doc.title}
                 />

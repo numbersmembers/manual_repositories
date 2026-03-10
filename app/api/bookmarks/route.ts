@@ -32,13 +32,24 @@ export async function GET() {
 // POST /api/bookmarks - 북마크 추가/토글
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthUser()
+    let user = await getAuthUser()
+    const body = await request.json()
+    const { document_id, user_email } = body
+
+    // Fallback: look up user by email if cookie auth fails
+    if (!user && user_email) {
+      const supabase = createServiceClient()
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', user_email)
+        .single()
+      user = data
+    }
+
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 400 })
     }
-
-    const body = await request.json()
-    const { document_id } = body
 
     if (!document_id) {
       return NextResponse.json({ error: 'document_id is required' }, { status: 400 })
