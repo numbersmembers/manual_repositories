@@ -14,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import type { Category } from '@/lib/types'
 
@@ -56,15 +57,20 @@ function CategoryNode({
   level?: number
 }) {
   const [open, setOpen] = useState(false)
+  const { isMobile, setOpenMobile } = useSidebar()
   const hasChildren = category.children && category.children.length > 0
   const href = `/documents?category=${category.id}`
   const isActive = currentPath.includes(`category=${category.id}`)
+
+  const closeMobileSidebar = () => {
+    if (isMobile) setOpenMobile(false)
+  }
 
   if (!hasChildren) {
     return (
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={isActive} className="text-sm">
-          <Link href={href}>
+          <Link href={href} onClick={closeMobileSidebar}>
             <Folder className="h-4 w-4" />
             <span>{category.name}</span>
           </Link>

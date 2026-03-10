@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -19,15 +19,41 @@ function ClearSession() {
   return null
 }
 
+function LoginError() {
+  const searchParams = useSearchParams()
+  const error = searchParams.get('error')
+
+  if (!error) return null
+
+  return (
+    <p className="text-sm text-destructive">
+      로그인에 실패했습니다. 다시 시도해주세요.
+    </p>
+  )
+}
+
 export default function LoginPage() {
+  const [loading, setLoading] = useState(false)
+
   const handleGoogleLogin = async () => {
-    const supabase = createClient()
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    setLoading(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: 'select_account',
+          },
+        },
+      })
+      if (error) {
+        setLoading(false)
+      }
+    } catch {
+      setLoading(false)
+    }
   }
 
   return (
@@ -54,11 +80,15 @@ export default function LoginPage() {
         <div className="space-y-3">
           <Button
             onClick={handleGoogleLogin}
+            disabled={loading}
             className="w-full border-2 border-black font-bold shadow-[3px_3px_0_0_#000] hover:shadow-[1px_1px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-100"
             size="lg"
           >
-            Google 계정으로 로그인
+            {loading ? '로그인 중...' : 'Google 계정으로 로그인'}
           </Button>
+          <Suspense>
+            <LoginError />
+          </Suspense>
           <p className="text-xs text-muted-foreground">
             모든 활동은 로그에 기록됩니다
           </p>

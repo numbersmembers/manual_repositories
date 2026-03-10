@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-10T08:59:46.657Z",
+  "lastUpdated": "2026-03-10T09:53:21.244Z",
   "activeFeatures": [
     "v2-refactoring",
     "manual_repositories",
@@ -50,9 +50,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:24:01.198Z",
-        "lastUpdated": "2026-03-10T08:57:24.955Z"
+        "lastUpdated": "2026-03-10T09:36:30.417Z"
       },
-      "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\components\\auth-gate.tsx"
+      "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\components\\greeting.tsx"
     },
     "supabase": {
       "phase": "do",
@@ -102,7 +102,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:30:03.589Z",
-        "lastUpdated": "2026-03-10T08:59:46.657Z"
+        "lastUpdated": "2026-03-10T09:53:21.244Z"
       },
       "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\login\\page.tsx"
     },
@@ -128,7 +128,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:30:11.963Z",
-        "lastUpdated": "2026-03-10T08:35:42.210Z"
+        "lastUpdated": "2026-03-10T09:21:41.433Z"
       },
       "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\(main)\\documents\\page.tsx"
     },
@@ -141,7 +141,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:30:14.056Z",
-        "lastUpdated": "2026-03-10T08:58:50.536Z"
+        "lastUpdated": "2026-03-10T09:07:51.759Z"
       },
       "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\(main)\\upload\\page.tsx"
     },
@@ -232,7 +232,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:53:10.036Z",
-        "lastUpdated": "2026-03-10T07:29:15.350Z"
+        "lastUpdated": "2026-03-10T09:38:27.611Z"
       },
       "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\api\\documents\\search\\route.ts"
     },
@@ -284,7 +284,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:53:46.700Z",
-        "lastUpdated": "2026-03-10T07:28:46.478Z"
+        "lastUpdated": "2026-03-10T09:25:56.484Z"
       },
       "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\api\\activity-logs\\route.ts"
     },
@@ -310,9 +310,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:56:46.891Z",
-        "lastUpdated": "2026-03-10T08:58:26.729Z"
+        "lastUpdated": "2026-03-10T09:52:59.944Z"
       },
-      "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\components\\layout\\app-sidebar.tsx"
+      "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\components\\layout\\category-tree.tsx"
     },
     "(main)": {
       "phase": "do",
@@ -323,7 +323,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T13:57:19.474Z",
-        "lastUpdated": "2026-03-10T08:46:43.010Z"
+        "lastUpdated": "2026-03-10T09:37:00.088Z"
       },
       "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\(main)\\page.tsx"
     },
@@ -336,9 +336,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T14:00:18.391Z",
-        "lastUpdated": "2026-03-09T14:00:18.391Z"
+        "lastUpdated": "2026-03-10T09:26:44.090Z"
       },
-      "lastFile": "c:\\Users\\user\\manual_repositories\\app\\(main)\\admin\\logs\\page.tsx"
+      "lastFile": "c:\\Users\\bsmoo\\manual_repositories\\app\\(main)\\admin\\logs\\page.tsx"
     },
     "actions": {
       "phase": "do",
@@ -416,7 +416,7 @@
   "session": {
     "startedAt": "2026-03-09T12:13:02.129Z",
     "onboardingCompleted": true,
-    "lastActivity": "2026-03-10T08:59:46.657Z"
+    "lastActivity": "2026-03-10T09:53:21.244Z"
   },
   "history": [
     {
@@ -1897,6 +1897,210 @@
     },
     {
       "timestamp": "2026-03-10T08:59:46.657Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:07:38.527Z",
+      "feature": "upload",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:07:51.759Z",
+      "feature": "upload",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:21:03.233Z",
+      "feature": "manual_repositories",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:21:41.433Z",
+      "feature": "documents",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:21:51.325Z",
+      "feature": "manual_repositories",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:21:58.194Z",
+      "feature": "manual_repositories",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:22:26.274Z",
+      "feature": "search",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:23:03.734Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:23:15.380Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:23:21.083Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:23:28.512Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:23:39.227Z",
+      "feature": "(main)",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:23:44.602Z",
+      "feature": "(main)",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:23:53.653Z",
+      "feature": "manual_repositories",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:23:58.764Z",
+      "feature": "manual_repositories",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:25:40.015Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:25:56.484Z",
+      "feature": "activity-logs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:26:17.196Z",
+      "feature": "logs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:26:29.408Z",
+      "feature": "logs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:26:44.090Z",
+      "feature": "logs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:36:01.829Z",
+      "feature": "manual_repositories",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:36:18.014Z",
+      "feature": "(main)",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:36:30.417Z",
+      "feature": "manual_repositories",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:36:46.471Z",
+      "feature": "(main)",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:36:53.171Z",
+      "feature": "(main)",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:37:00.088Z",
+      "feature": "(main)",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:37:23.306Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:38:04.828Z",
+      "feature": "search",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:38:27.611Z",
+      "feature": "search",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:52:31.770Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:52:42.448Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:52:51.640Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:52:59.944Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T09:53:21.244Z",
       "feature": "login",
       "phase": "do",
       "action": "updated"

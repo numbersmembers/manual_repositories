@@ -24,6 +24,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarSeparator,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { User, Category } from '@/lib/types'
@@ -60,10 +61,15 @@ function NavItem({
   title: string
   isActive: boolean
 }) {
+  const { isMobile, setOpenMobile } = useSidebar()
+
   return (
     <SidebarMenuItem>
       <Link
         href={href}
+        onClick={() => {
+          if (isMobile) setOpenMobile(false)
+        }}
         className={cn(
           'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold tracking-tight transition-all',
           isActive
