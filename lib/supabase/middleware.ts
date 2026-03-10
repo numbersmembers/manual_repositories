@@ -1,10 +1,17 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/auth', '/pending', '/api/debug']
+const PUBLIC_PATHS = ['/login', '/auth', '/pending', '/api']
 
-function isPublicPath(pathname: string) {
-  return PUBLIC_PATHS.some((p) => pathname.startsWith(p))
+function shouldSkipRedirect(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  // Skip redirect for public paths
+  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) return true
+  // Skip redirect for Server Action requests (POST with Next-Action header)
+  if (request.headers.get('next-action')) return true
+  // Skip redirect for RSC prefetch requests
+  if (request.headers.get('rsc')) return true
+  return false
 }
 
 export async function updateSession(request: NextRequest) {
@@ -35,7 +42,7 @@ export async function updateSession(request: NextRequest) {
     const { data: { session } } = await supabase.auth.getSession()
 
     // Redirect to login if no session on protected routes
-    if (!session && !isPublicPath(request.nextUrl.pathname)) {
+    if (!session && !shouldSkipRedirect(request)) {
       const loginUrl = new URL('/login', request.url)
       return NextResponse.redirect(loginUrl)
     }
