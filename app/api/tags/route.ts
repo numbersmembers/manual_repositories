@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAuth } from '@/lib/auth'
 
 // GET /api/tags - 태그 목록 조회
 export async function GET() {
   try {
-    await requireAuth()
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     const { data, error } = await supabase
       .from('tags')
@@ -19,15 +17,14 @@ export async function GET() {
 
     return NextResponse.json(data)
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
 // POST /api/tags - 태그 생성
 export async function POST(request: NextRequest) {
   try {
-    await requireAuth()
     const body = await request.json()
     const { name } = body
 
@@ -35,7 +32,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
 
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     const { data, error } = await supabase
       .from('tags')
@@ -49,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: 201 })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAuth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
 import { getSignedUrl } from '@/lib/supabase/storage'
 
@@ -10,9 +10,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth()
+    const user = await getAuthUser()
     const { id } = await params
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     const { data: doc } = await supabase
       .from('documents')
@@ -25,7 +25,7 @@ export async function GET(
     }
 
     // 보안등급 체크
-    if (user.role !== 'admin' && doc.security_level === 'confidential') {
+    if (user?.role !== 'admin' && doc.security_level === 'confidential') {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
@@ -35,19 +35,21 @@ export async function GET(
     }
 
     // 다운로드 로그
-    await logActivity(supabase, {
-      userId: user.id,
-      userEmail: user.email,
-      userName: user.name,
-      action: 'download',
-      targetType: 'document',
-      targetId: id,
-      targetName: doc.title,
-    })
+    if (user) {
+      await logActivity(supabase, {
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        action: 'download',
+        targetType: 'document',
+        targetId: id,
+        targetName: doc.title,
+      })
+    }
 
     return NextResponse.redirect(signedUrl)
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

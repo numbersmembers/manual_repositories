@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAdmin } from '@/lib/auth'
 
 // GET /api/users - 사용자 목록 (관리자 전용)
 export async function GET() {
   try {
-    await requireAdmin()
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     const { data, error } = await supabase
       .from('users')
@@ -19,7 +17,7 @@ export async function GET() {
 
     return NextResponse.json(data)
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

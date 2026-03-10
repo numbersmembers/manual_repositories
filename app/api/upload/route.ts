@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAuth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
 import { uploadFile, generateStoragePath } from '@/lib/supabase/storage'
 import { getFileExtension } from '@/lib/utils'
@@ -8,7 +8,7 @@ import { getFileExtension } from '@/lib/utils'
 // POST /api/upload - 파일 업로드
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth()
+    const user = await getAuthUser()
     const formData = await request.formData()
 
     const file = formData.get('file') as File | null
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     // 카테고리 경로 조회
     const { data: category } = await supabase
@@ -64,8 +64,8 @@ export async function POST(request: NextRequest) {
         file_size: file.size,
         security_level: securityLevel,
         category_id: categoryId,
-        author_id: user.id,
-        author_name: user.name,
+        author_id: user?.id ?? null,
+        author_name: user?.name ?? 'Unknown',
       })
       .select()
       .single()
@@ -99,24 +99,26 @@ export async function POST(request: NextRequest) {
     }
 
     // 활동 로그
-    await logActivity(supabase, {
-      userId: user.id,
-      userEmail: user.email,
-      userName: user.name,
-      action: 'upload',
-      targetType: 'document',
-      targetId: doc.id,
-      targetName: title,
-      metadata: {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType,
-      },
-    })
+    if (user) {
+      await logActivity(supabase, {
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        action: 'upload',
+        targetType: 'document',
+        targetId: doc.id,
+        targetName: title,
+        metadata: {
+          fileName: file.name,
+          fileSize: file.size,
+          fileType,
+        },
+      })
+    }
 
     return NextResponse.json(doc, { status: 201 })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

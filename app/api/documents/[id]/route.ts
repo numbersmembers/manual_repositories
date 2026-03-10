@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAuth, requireAdmin } from '@/lib/auth'
+import { getAuthUser } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
 import { deleteFile } from '@/lib/supabase/storage'
 
@@ -10,9 +10,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth()
+    const user = await getAuthUser()
     const { id } = await params
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     const { data, error } = await supabase
       .from('documents')
@@ -25,7 +25,7 @@ export async function GET(
     }
 
     // 보안등급 체크
-    if (user.role !== 'admin' && data.security_level === 'confidential') {
+    if (user?.role !== 'admin' && data.security_level === 'confidential') {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
@@ -35,20 +35,22 @@ export async function GET(
     const { document_tags: _, ...rest } = data
 
     // 열람 로그
-    await logActivity(supabase, {
-      userId: user.id,
-      userEmail: user.email,
-      userName: user.name,
-      action: 'view',
-      targetType: 'document',
-      targetId: id,
-      targetName: data.title,
-    })
+    if (user) {
+      await logActivity(supabase, {
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        action: 'view',
+        targetType: 'document',
+        targetId: id,
+        targetName: data.title,
+      })
+    }
 
     return NextResponse.json({ ...rest, tags })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
@@ -58,9 +60,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const admin = await requireAdmin()
+    const user = await getAuthUser()
     const { id } = await params
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     // 먼저 문서 정보 조회
     const { data: doc } = await supabase
@@ -86,19 +88,21 @@ export async function DELETE(
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    await logActivity(supabase, {
-      userId: admin.id,
-      userEmail: admin.email,
-      userName: admin.name,
-      action: 'delete',
-      targetType: 'document',
-      targetId: id,
-      targetName: doc.title,
-    })
+    if (user) {
+      await logActivity(supabase, {
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        action: 'delete',
+        targetType: 'document',
+        targetId: id,
+        targetName: doc.title,
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

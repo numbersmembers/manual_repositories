@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAuth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/auth'
 
 // GET /api/comments?document_id=xxx - 문서별 댓글 조회
 export async function GET(request: NextRequest) {
   try {
-    await requireAuth()
     const { searchParams } = new URL(request.url)
     const documentId = searchParams.get('document_id')
 
@@ -13,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'document_id is required' }, { status: 400 })
     }
 
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     const { data, error } = await supabase
       .from('comments')
@@ -27,15 +26,15 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data)
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
 // POST /api/comments - 댓글 작성
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth()
+    const user = await getAuthUser()
     const body = await request.json()
     const { document_id, content } = body
 
@@ -46,14 +45,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     const { data, error } = await supabase
       .from('comments')
       .insert({
         document_id,
-        author_id: user.id,
-        author_name: user.name,
+        author_id: user?.id ?? null,
+        author_name: user?.name ?? 'Unknown',
         content: content.trim(),
       })
       .select()
@@ -65,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: 201 })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

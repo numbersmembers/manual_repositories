@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAdmin } from '@/lib/auth'
 
 // GET /api/activity-logs - 활동 로그 조회 (관리자 전용)
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin()
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
@@ -13,7 +11,7 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('user_id')
     const offset = (page - 1) * limit
 
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     let query = supabase
       .from('activity_logs')
@@ -42,7 +40,7 @@ export async function GET(request: NextRequest) {
       limit,
     })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

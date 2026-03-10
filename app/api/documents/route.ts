@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAuth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/auth'
 
 // GET /api/documents?category_id=xxx - 문서 목록 조회
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth()
+    const user = await getAuthUser()
     const { searchParams } = new URL(request.url)
     const categoryId = searchParams.get('category_id')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = (page - 1) * limit
 
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     let query = supabase
       .from('documents')
       .select('*, document_tags(tag_id, tags(name))', { count: 'exact' })
 
     // staff는 일반 문서만
-    if (user.role !== 'admin') {
+    if (user?.role !== 'admin') {
       query = query.eq('security_level', 'general')
     }
 
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       limit,
     })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

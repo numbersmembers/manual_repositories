@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAdmin } from '@/lib/auth'
+import { getAuthUser } from '@/lib/auth'
 import { logActivity } from '@/lib/activity-log'
 
 // PATCH /api/documents/[id]/move - 문서 카테고리 이동 (관리자 전용)
@@ -9,7 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const admin = await requireAdmin()
+    const user = await getAuthUser()
     const { id } = await params
     const body = await request.json()
     const { category_id } = body
@@ -18,7 +18,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'category_id is required' }, { status: 400 })
     }
 
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     const { data: doc } = await supabase
       .from('documents')
@@ -41,20 +41,22 @@ export async function PATCH(
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    await logActivity(supabase, {
-      userId: admin.id,
-      userEmail: admin.email,
-      userName: admin.name,
-      action: 'move',
-      targetType: 'document',
-      targetId: id,
-      targetName: doc?.title,
-      metadata: { newCategory: newCat?.name, newCategoryId: category_id },
-    })
+    if (user) {
+      await logActivity(supabase, {
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        action: 'move',
+        targetType: 'document',
+        targetId: id,
+        targetName: doc?.title,
+        metadata: { newCategory: newCat?.name, newCategoryId: category_id },
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

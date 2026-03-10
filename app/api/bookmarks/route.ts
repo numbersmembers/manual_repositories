@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAuth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/auth'
 
 // GET /api/bookmarks - 내 북마크 목록
 export async function GET() {
   try {
-    const user = await requireAuth()
-    const supabase = await createServiceClient()
+    const user = await getAuthUser()
+    if (!user) {
+      return NextResponse.json([], { status: 200 })
+    }
+
+    const supabase = createServiceClient()
 
     const { data, error } = await supabase
       .from('bookmarks')
@@ -20,15 +24,19 @@ export async function GET() {
 
     return NextResponse.json(data)
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
 // POST /api/bookmarks - 북마크 추가/토글
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth()
+    const user = await getAuthUser()
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 400 })
+    }
+
     const body = await request.json()
     const { document_id } = body
 
@@ -36,7 +44,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'document_id is required' }, { status: 400 })
     }
 
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     // 이미 북마크되어 있으면 삭제 (토글)
     const { data: existing } = await supabase
@@ -63,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ bookmarked: true }, { status: 201 })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
