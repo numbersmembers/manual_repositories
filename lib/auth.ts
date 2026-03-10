@@ -6,17 +6,17 @@ export async function getAuthUser(): Promise<User | null> {
     const supabase = await createClient()
 
     const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser()
+      data: { session },
+    } = await supabase.auth.getSession()
 
-    if (authError || !authUser?.email) return null
+    const email = session?.user?.email
+    if (!email) return null
 
     const serviceClient = await createServiceClient()
     const { data: dbUser } = await serviceClient
       .from('users')
       .select('*')
-      .eq('email', authUser.email)
+      .eq('email', email)
       .single()
 
     return dbUser ?? null
