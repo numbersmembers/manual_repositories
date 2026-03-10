@@ -70,10 +70,10 @@ export async function PATCH(
       const sb = createServiceClient()
       const { data: u } = await sb
         .from('users')
-        .select('id, email, name, role')
+        .select('*')
         .eq('email', user_email)
         .single()
-      if (u) adminUser = u
+      if (u) adminUser = u as typeof adminUser
     }
 
     if (!adminUser || adminUser.role !== 'admin') {
