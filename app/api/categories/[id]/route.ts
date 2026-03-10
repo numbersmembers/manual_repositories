@@ -1,42 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
-import type { User } from '@/lib/types'
-
-function createAuthClientFromRequest(request: NextRequest) {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll() {},
-      },
-    }
-  )
-}
-
-async function getAdminFromRequest(request: NextRequest): Promise<User> {
-  const supabase = createAuthClientFromRequest(request)
-  const { data: { user: authUser } } = await supabase.auth.getUser()
-  const email = authUser?.email
-  if (!email) throw new Error('Unauthorized')
-
-  const serviceClient = createServiceClient()
-  const { data: user } = await serviceClient
-    .from('users')
-    .select('*')
-    .eq('email', email)
-    .single()
-
-  if (!user) throw new Error('Unauthorized')
-  if (user.status !== 'active') throw new Error('Forbidden')
-  if (user.role !== 'admin') throw new Error('Forbidden: Admin required')
-  return user as User
-}
 
 // PATCH /api/categories/[id]
 export async function PATCH(
@@ -44,7 +8,6 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await getAdminFromRequest(request)
     const { id } = await params
     const body = await request.json()
     const { name, parent_id, sort_order } = body
@@ -84,8 +47,8 @@ export async function PATCH(
 
     return NextResponse.json({ success: true })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
@@ -95,7 +58,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const admin = await getAdminFromRequest(request)
     const { id } = await params
     const supabase = createServiceClient()
 
@@ -114,19 +76,31 @@ export async function DELETE(
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    await logActivity(supabase, {
-      userId: admin.id,
-      userEmail: admin.email,
-      userName: admin.name,
-      action: 'delete_folder',
-      targetType: 'category',
-      targetId: id,
-      targetName: category?.name,
-    })
+    // Log activity if user_email provided in query
+    const userEmail = request.nextUrl.searchParams.get('user_email')
+    if (userEmail) {
+      const { data: user } = await supabase
+        .from('users')
+        .select('id, name, email')
+        .eq('email', userEmail)
+        .single()
+
+      if (user) {
+        await logActivity(supabase, {
+          userId: user.id,
+          userEmail: user.email,
+          userName: user.name,
+          action: 'delete_folder',
+          targetType: 'category',
+          targetId: id,
+          targetName: category?.name,
+        })
+      }
+    }
 
     return NextResponse.json({ success: true })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unauthorized'
-    return NextResponse.json({ error: msg }, { status: 403 })
+    const msg = e instanceof Error ? e.message : 'Server error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
