@@ -58,6 +58,15 @@ export function generateStoragePath(
   fileId: string,
   fileName: string
 ): string {
-  const sanitized = fileName.replace(/[^a-zA-Z0-9가-힣._-]/g, '_')
-  return `${categoryPath}/${fileId}_${sanitized}`
+  // Supabase Storage only allows ASCII characters in keys
+  const safeCategoryPath = categoryPath
+    .replace(/[^a-zA-Z0-9/_-]/g, '_')
+    .replace(/_+/g, '_')
+  const ext = fileName.includes('.') ? fileName.split('.').pop() : ''
+  const safeName = fileName
+    .replace(/\.[^.]+$/, '') // remove extension
+    .replace(/[^a-zA-Z0-9._-]/g, '_') // only ASCII safe chars
+    .replace(/_+/g, '_') // collapse multiple underscores
+    .slice(0, 50) // limit length
+  return `${safeCategoryPath}/${fileId}_${safeName}${ext ? `.${ext}` : ''}`
 }
