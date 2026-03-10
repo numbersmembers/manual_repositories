@@ -1,61 +1,82 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState } from 'react'
 import { FolderPlus, Trash2, Folder, Loader2 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import {
-  createCategory,
-  deleteCategory,
-  getCategories,
-} from '@/lib/actions/categories'
 import type { Category } from '@/lib/types'
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [newName, setNewName] = useState('')
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
 
   const fetchCategories = async () => {
-    const data = await getCategories()
-    setCategories(data)
-    setLoading(false)
+    try {
+      const res = await fetch('/api/categories')
+      if (res.ok) {
+        const data = await res.json()
+        setCategories(data)
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
     fetchCategories()
   }, [])
 
-  const handleCreate = () => {
-    if (!newName.trim()) return
+  const handleCreate = async () => {
+    if (!newName.trim() || isPending) return
+    setIsPending(true)
 
-    startTransition(async () => {
-      const result = await createCategory(newName.trim(), null)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName.trim() }),
+      })
+
+      if (res.ok) {
         toast.success('카테고리가 생성되었습니다.')
         setNewName('')
         fetchCategories()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || '생성에 실패했습니다.')
       }
-    })
+    } catch {
+      toast.error('네트워크 오류가 발생했습니다.')
+    } finally {
+      setIsPending(false)
+    }
   }
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (!confirm(`"${name}" 카테고리를 삭제하시겠습니까?`)) return
+    setIsPending(true)
 
-    startTransition(async () => {
-      const result = await deleteCategory(id)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
+    try {
+      const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' })
+
+      if (res.ok) {
         toast.success('카테고리가 삭제되었습니다.')
         fetchCategories()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || '삭제에 실패했습니다.')
       }
-    })
+    } catch {
+      toast.error('네트워크 오류가 발생했습니다.')
+    } finally {
+      setIsPending(false)
+    }
   }
 
   return (
