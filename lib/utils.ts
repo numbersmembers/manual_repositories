@@ -37,6 +37,14 @@ export function getFileExtension(filename: string): string {
   return ext ? `.${ext}` : ''
 }
 
+/**
+ * Natural sort comparator: "1", "2", "10" instead of "1", "10", "2"
+ * Uses locale-aware numeric collation for Korean + number mixed strings
+ */
+export function naturalCompare(a: string, b: string): number {
+  return a.localeCompare(b, 'ko', { numeric: true, sensitivity: 'base' })
+}
+
 export function getMimeCategory(mimeType: string): string {
   if (mimeType.startsWith('image/')) return 'image'
   if (mimeType === 'application/pdf') return 'pdf'

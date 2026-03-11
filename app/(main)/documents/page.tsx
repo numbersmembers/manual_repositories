@@ -12,18 +12,197 @@ import {
   BookmarkCheck,
   Shield,
   FolderOpen,
+  Folder,
   Calendar,
+  ChevronRight,
+  ChevronDown,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { FileIcon } from '@/components/file-icon'
-import { cn, formatFileSize, formatDate } from '@/lib/utils'
+import { cn, formatFileSize, formatDate, naturalCompare } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useUser } from '@/components/user-provider'
 import type { Document, Category } from '@/lib/types'
 
 type GroupMode = 'all' | 'folder' | 'date'
+
+type FolderTreeNode = {
+  category: Category
+  docs: Document[]
+  children: FolderTreeNode[]
+}
+
+function buildFolderTree(
+  categories: Category[],
+  documents: Document[]
+): FolderTreeNode[] {
+  const catMap = new Map<string, FolderTreeNode>()
+
+  // Create nodes for all categories
+  categories.forEach((cat) => {
+    catMap.set(cat.id, { category: cat, docs: [], children: [] })
+  })
+
+  // Assign documents to their category nodes
+  documents.forEach((doc) => {
+    const node = catMap.get(doc.category_id)
+    if (node) node.docs.push(doc)
+  })
+
+  // Build tree
+  const roots: FolderTreeNode[] = []
+  categories.forEach((cat) => {
+    const node = catMap.get(cat.id)!
+    if (cat.parent_id) {
+      const parent = catMap.get(cat.parent_id)
+      if (parent) parent.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  })
+
+  // Sort children naturally (sort_order first, then name)
+  const sortNodes = (nodes: FolderTreeNode[]) => {
+    nodes.sort((a, b) => {
+      if (a.category.sort_order !== b.category.sort_order)
+        return a.category.sort_order - b.category.sort_order
+      return naturalCompare(a.category.name, b.category.name)
+    })
+    nodes.forEach((n) => sortNodes(n.children))
+  }
+  sortNodes(roots)
+
+  // Filter out empty branches (no docs anywhere in subtree)
+  const hasDocsInSubtree = (node: FolderTreeNode): boolean =>
+    node.docs.length > 0 || node.children.some(hasDocsInSubtree)
+
+  const filterEmpty = (nodes: FolderTreeNode[]): FolderTreeNode[] =>
+    nodes
+      .filter(hasDocsInSubtree)
+      .map((n) => ({ ...n, children: filterEmpty(n.children) }))
+
+  return filterEmpty(roots)
+}
+
+function countDocsInSubtree(node: FolderTreeNode): number {
+  return node.docs.length + node.children.reduce((sum, c) => sum + countDocsInSubtree(c), 0)
+}
+
+function FolderTreeView({
+  nodes,
+  depth,
+  viewMode,
+  renderDocItem,
+  renderGridItem,
+}: {
+  nodes: FolderTreeNode[]
+  depth: number
+  viewMode: 'list' | 'grid'
+  renderDocItem: (doc: Document) => React.ReactNode
+  renderGridItem: (doc: Document) => React.ReactNode
+}) {
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
+    // Auto-expand first 2 levels
+    const ids = new Set<string>()
+    nodes.forEach((n) => {
+      ids.add(n.category.id)
+      n.children.forEach((c) => ids.add(c.category.id))
+    })
+    return ids
+  })
+
+  const toggle = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  return (
+    <div className="space-y-1">
+      {nodes.map((node) => {
+        const isExpanded = expandedIds.has(node.category.id)
+        const totalDocs = countDocsInSubtree(node)
+        const hasChildren = node.children.length > 0
+        const hasDocs = node.docs.length > 0
+
+        return (
+          <div key={node.category.id}>
+            {/* Folder header */}
+            <button
+              className={cn(
+                'w-full flex items-center gap-2 rounded-xl px-3 py-2.5 text-left transition-colors',
+                'hover:bg-accent/50',
+                depth === 0 && 'bg-muted/30'
+              )}
+              style={{ paddingLeft: depth * 20 + 12 }}
+              onClick={() => toggle(node.category.id)}
+            >
+              {hasChildren || hasDocs ? (
+                isExpanded ? (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                )
+              ) : (
+                <span className="w-4 shrink-0" />
+              )}
+              {isExpanded ? (
+                <FolderOpen className="h-5 w-5 text-primary/70 shrink-0" />
+              ) : (
+                <Folder className="h-5 w-5 text-muted-foreground shrink-0" />
+              )}
+              <span className="text-sm font-medium truncate">
+                {node.category.name}
+              </span>
+              <span className="text-xs text-muted-foreground ml-auto shrink-0">
+                {totalDocs}개
+              </span>
+            </button>
+
+            {/* Expanded content */}
+            {isExpanded && (
+              <div className="mt-1">
+                {/* Direct documents */}
+                {hasDocs && (
+                  <div
+                    style={{ paddingLeft: depth * 20 + 32 }}
+                    className="pr-2"
+                  >
+                    {viewMode === 'list' ? (
+                      <div className="space-y-1.5 mb-2">
+                        {node.docs.map(renderDocItem)}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-2">
+                        {node.docs.map(renderGridItem)}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Sub-folders (recursive) */}
+                {hasChildren && (
+                  <FolderTreeView
+                    nodes={node.children}
+                    depth={depth + 1}
+                    viewMode={viewMode}
+                    renderDocItem={renderDocItem}
+                    renderGridItem={renderGridItem}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 export default function DocumentsPage() {
   const searchParams = useSearchParams()
@@ -121,34 +300,25 @@ export default function DocumentsPage() {
     return map
   }, [categories])
 
-  // Group documents by folder or date
-  const groupedDocs = useMemo(() => {
-    if (groupMode === 'all') return null
+  // Folder tree for tree view
+  const folderTree = useMemo(
+    () => buildFolderTree(categories, documents),
+    [categories, documents]
+  )
 
+  // Group documents by date (non-folder mode)
+  const groupedByDate = useMemo(() => {
+    if (groupMode !== 'date') return null
     const groups: Record<string, Document[]> = {}
-
-    if (groupMode === 'folder') {
-      documents.forEach((doc) => {
-        const key = categoryNameMap[doc.category_id] || '미분류'
-        if (!groups[key]) groups[key] = []
-        groups[key].push(doc)
-      })
-    } else {
-      // Group by date (YYYY.MM.DD)
-      documents.forEach((doc) => {
-        const date = new Date(doc.created_at)
-        const key = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
-        if (!groups[key]) groups[key] = []
-        groups[key].push(doc)
-      })
-    }
-
-    // Sort group keys
-    const sortedKeys = Object.keys(groups).sort((a, b) =>
-      groupMode === 'date' ? b.localeCompare(a) : a.localeCompare(b)
-    )
+    documents.forEach((doc) => {
+      const date = new Date(doc.created_at)
+      const key = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
+      if (!groups[key]) groups[key] = []
+      groups[key].push(doc)
+    })
+    const sortedKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a))
     return sortedKeys.map((key) => ({ label: key, docs: groups[key] }))
-  }, [documents, groupMode, categoryNameMap])
+  }, [documents, groupMode])
 
   const renderDocItem = (doc: Document) => {
     const isBookmarked = bookmarkedIds.has(doc.id)
@@ -156,7 +326,7 @@ export default function DocumentsPage() {
       <Link
         key={doc.id}
         href={`/documents/${doc.id}`}
-        className="flex items-center gap-4 rounded-lg border p-4 hover:bg-accent transition-colors"
+        className="flex items-center gap-4 rounded-xl border bg-card p-4 hover:bg-accent/50 transition-colors"
       >
         <FileIcon
           fileName={doc.file_name}
@@ -217,7 +387,7 @@ export default function DocumentsPage() {
     <Link
       key={doc.id}
       href={`/documents/${doc.id}`}
-      className="rounded-lg border p-4 hover:bg-accent transition-colors flex flex-col"
+      className="rounded-xl border bg-card p-4 hover:bg-accent/50 transition-colors flex flex-col"
     >
       <FileIcon
         fileName={doc.file_name}
@@ -238,13 +408,13 @@ export default function DocumentsPage() {
     <>
       <Header title="문서함" />
       <div className="flex-1 p-6">
-        {/* 툴바 */}
+        {/* Toolbar */}
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-muted-foreground">
             {loading ? '불러오는 중...' : `총 ${total}개 문서`}
           </p>
           <div className="flex gap-1">
-            {/* 그룹 모드 */}
+            {/* Group mode */}
             <div className="flex gap-1 mr-2 border-r pr-2">
               <Button
                 variant={groupMode === 'all' ? 'secondary' : 'ghost'}
@@ -270,7 +440,7 @@ export default function DocumentsPage() {
                 날짜별
               </Button>
             </div>
-            {/* 뷰 모드 */}
+            {/* View mode */}
             <Button
               variant={viewMode === 'list' ? 'secondary' : 'ghost'}
               size="icon"
@@ -288,23 +458,28 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* 문서 목록 */}
+        {/* Document list */}
         {documents.length === 0 && !loading ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <FileText className="h-12 w-12 mb-4" />
             <p>문서가 없습니다</p>
           </div>
-        ) : groupMode !== 'all' && groupedDocs ? (
-          // Grouped view
+        ) : groupMode === 'folder' ? (
+          // Folder tree view
+          <FolderTreeView
+            nodes={folderTree}
+            depth={0}
+            viewMode={viewMode}
+            renderDocItem={renderDocItem}
+            renderGridItem={renderGridItem}
+          />
+        ) : groupMode === 'date' && groupedByDate ? (
+          // Date grouped view
           <div className="space-y-6">
-            {groupedDocs.map((group) => (
+            {groupedByDate.map((group) => (
               <div key={group.label}>
                 <div className="flex items-center gap-2 mb-3">
-                  {groupMode === 'folder' ? (
-                    <FolderOpen className="h-4 w-4 text-primary" />
-                  ) : (
-                    <Calendar className="h-4 w-4 text-primary" />
-                  )}
+                  <Calendar className="h-4 w-4 text-primary" />
                   <h3 className="text-sm font-bold tracking-tight">
                     {group.label}
                   </h3>

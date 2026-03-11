@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Folder, FolderOpen } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, naturalCompare } from '@/lib/utils'
 import {
   Collapsible,
   CollapsibleContent,
@@ -43,6 +43,18 @@ function buildTree(categories: Category[]): Category[] {
       roots.push(node)
     }
   })
+
+  // Sort by sort_order first, then natural sort by name
+  const sortNodes = (nodes: Category[]) => {
+    nodes.sort((a, b) => {
+      if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order
+      return naturalCompare(a.name, b.name)
+    })
+    nodes.forEach((n) => {
+      if (n.children && n.children.length > 0) sortNodes(n.children)
+    })
+  }
+  sortNodes(roots)
 
   return roots
 }

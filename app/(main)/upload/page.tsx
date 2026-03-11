@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, X, FileText, FolderOpen } from 'lucide-react'
+import { Upload, X, FileText, FolderOpen, ChevronRight } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,11 +18,11 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { toast } from 'sonner'
-import { formatFileSize } from '@/lib/utils'
+import { formatFileSize, naturalCompare } from '@/lib/utils'
 import { useUser } from '@/components/user-provider'
 import type { Category } from '@/lib/types'
 
-interface UploadItem {
+type UploadItem = {
   file: File
   title: string
   tags: string[]
@@ -39,7 +39,6 @@ function readEntriesRecursively(entries: FileSystemEntry[]): Promise<File[]> {
     return new Promise((resolve) => {
       if (entry.isFile) {
         ;(entry as FileSystemFileEntry).file((file) => {
-          // Skip hidden files
           if (!file.name.startsWith('.')) files.push(file)
           resolve()
         }, () => resolve())
@@ -56,6 +55,125 @@ function readEntriesRecursively(entries: FileSystemEntry[]): Promise<File[]> {
   }
 
   return Promise.all(entries.map(readEntry)).then(() => files)
+}
+
+const MAX_DEPTH = 10
+const LEVEL_LABELS = [
+  '최상위', '1단계', '2단계', '3단계', '4단계',
+  '5단계', '6단계', '7단계', '8단계', '9단계',
+]
+
+function CascadeCategorySelector({
+  categories,
+  selectedId,
+  onSelect,
+}: {
+  categories: Category[]
+  selectedId: string
+  onSelect: (id: string) => void
+}) {
+  // selections[i] = selected category id at depth i
+  const [selections, setSelections] = useState<string[]>([])
+
+  // Get children of a parent (null = roots), sorted naturally
+  const getChildren = useCallback(
+    (parentId: string | null) =>
+      categories
+        .filter((c) =>
+          parentId === null ? !c.parent_id : c.parent_id === parentId
+        )
+        .sort((a, b) => {
+          if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order
+          return naturalCompare(a.name, b.name)
+        }),
+    [categories]
+  )
+
+  // Initialize selections from selectedId (rebuild path)
+  useEffect(() => {
+    if (!selectedId || categories.length === 0) {
+      setSelections([])
+      return
+    }
+    const path: string[] = []
+    let current = categories.find((c) => c.id === selectedId)
+    while (current) {
+      path.unshift(current.id)
+      current = current.parent_id
+        ? categories.find((c) => c.id === current!.parent_id)
+        : undefined
+    }
+    setSelections(path)
+  }, [selectedId, categories])
+
+  // Build cascade levels to display
+  const levels = useMemo(() => {
+    const result: { parentId: string | null; options: Category[] }[] = []
+    const roots = getChildren(null)
+    if (roots.length === 0) return result
+
+    result.push({ parentId: null, options: roots })
+
+    for (let i = 0; i < selections.length && i < MAX_DEPTH - 1; i++) {
+      const children = getChildren(selections[i])
+      if (children.length === 0) break
+      result.push({ parentId: selections[i], options: children })
+    }
+
+    return result
+  }, [selections, getChildren])
+
+  const handleSelect = (depth: number, value: string) => {
+    const newSelections = [...selections.slice(0, depth), value]
+    setSelections(newSelections)
+    onSelect(value)
+  }
+
+  if (categories.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground py-2">
+        카테고리가 없습니다. 관리자 설정에서 먼저 생성해주세요.
+      </p>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      {levels.map((level, depth) => (
+        <div key={depth} className="flex items-center gap-2">
+          {depth > 0 && (
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          )}
+          <div className="flex-1">
+            <Select
+              value={selections[depth] || ''}
+              onValueChange={(val) => handleSelect(depth, val)}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder={`${LEVEL_LABELS[depth]} 선택`} />
+              </SelectTrigger>
+              <SelectContent>
+                {level.options.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="h-4 w-4" />
+                      {cat.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      ))}
+      {/* Show selected path */}
+      {selections.length > 0 && (
+        <p className="text-xs text-muted-foreground pl-1">
+          {categories.find((c) => c.id === selections[selections.length - 1])?.path || ''}
+        </p>
+      )}
+    </div>
+  )
 }
 
 export default function UploadPage() {
@@ -77,7 +195,6 @@ export default function UploadPage() {
   }, [])
 
   const addFiles = (files: File[]) => {
-    // Filter out directories (size 0 with no extension) and hidden files
     const validFiles = files.filter((f) => f.size > 0)
     if (validFiles.length === 0) return
     const newItems: UploadItem[] = validFiles.map((file) => ({
@@ -98,24 +215,21 @@ export default function UploadPage() {
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
 
-    // Use DataTransfer items API to handle folder drops
-    const items = e.dataTransfer.items
-    if (items && items.length > 0) {
+    const dropItems = e.dataTransfer.items
+    if (dropItems && dropItems.length > 0) {
       const entries: FileSystemEntry[] = []
-      for (let i = 0; i < items.length; i++) {
-        const entry = items[i].webkitGetAsEntry?.()
+      for (let i = 0; i < dropItems.length; i++) {
+        const entry = dropItems[i].webkitGetAsEntry?.()
         if (entry) entries.push(entry)
       }
 
       if (entries.some((entry) => entry.isDirectory)) {
-        // Recursively read all files from dropped folders
         const allFiles = await readEntriesRecursively(entries)
         addFiles(allFiles)
         return
       }
     }
 
-    // Fallback for simple file drops
     handleFiles(e.dataTransfer.files)
   }
 
@@ -210,42 +324,20 @@ export default function UploadPage() {
     <>
       <Header title="파일 업로드" />
       <div className="flex-1 p-6 max-w-3xl mx-auto space-y-6">
-        {/* 카테고리 & 보안등급 */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Category cascade selector + Security level */}
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_200px] gap-4">
           <div className="space-y-2">
-            <Label>카테고리</Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="카테고리 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {(() => {
-                  // Recursive tree flattening for unlimited depth
-                  const flattenTree = (parentId: string | null, depth: number): { cat: Category; depth: number }[] => {
-                    const children = categories.filter((c) =>
-                      parentId === null ? !c.parent_id : c.parent_id === parentId
-                    )
-                    return children.flatMap((child) => [
-                      { cat: child, depth },
-                      ...flattenTree(child.id, depth + 1),
-                    ])
-                  }
-                  return flattenTree(null, 0).map(({ cat, depth }) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      <div className="flex items-center gap-2">
-                        <FolderOpen className="h-4 w-4" />
-                        {depth > 0 ? `${'  '.repeat(depth - 1)}└ ${cat.name}` : cat.name}
-                      </div>
-                    </SelectItem>
-                  ))
-                })()}
-              </SelectContent>
-            </Select>
+            <Label>카테고리 (10단계 계층 선택)</Label>
+            <CascadeCategorySelector
+              categories={categories}
+              selectedId={selectedCategory}
+              onSelect={setSelectedCategory}
+            />
           </div>
           <div className="space-y-2">
             <Label>보안등급</Label>
             <Select value={securityLevel} onValueChange={setSecurityLevel}>
-              <SelectTrigger>
+              <SelectTrigger className="rounded-xl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -256,9 +348,9 @@ export default function UploadPage() {
           </div>
         </div>
 
-        {/* 드래그 & 드롭 영역 */}
+        {/* Drag & drop area */}
         <div
-          className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
+          className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-primary transition-colors"
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
@@ -277,20 +369,20 @@ export default function UploadPage() {
           />
         </div>
 
-        {/* 업로드 대기열 */}
+        {/* Upload queue */}
         {items.length > 0 && (
-          <Card>
+          <Card className="rounded-xl">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">
                 업로드 대기열 ({items.length}개)
               </CardTitle>
-              <Button onClick={uploadAll} disabled={uploading}>
+              <Button onClick={uploadAll} disabled={uploading} className="rounded-xl">
                 {uploading ? '업로드 중...' : '전체 업로드'}
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {items.map((item, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
+                <div key={index} className="border rounded-xl p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
                     <div className="flex-1 min-w-0">
@@ -300,7 +392,7 @@ export default function UploadPage() {
                           updateItem(index, { title: e.target.value })
                         }
                         placeholder="문서 제목"
-                        className="h-8 text-sm"
+                        className="h-8 text-sm rounded-lg"
                         disabled={item.status === 'done'}
                       />
                       <p className="text-xs text-muted-foreground mt-1">
@@ -322,7 +414,7 @@ export default function UploadPage() {
                     )}
                   </div>
 
-                  {/* 태그 */}
+                  {/* Tags */}
                   {item.status !== 'done' && (
                     <div className="flex items-center gap-2 flex-wrap">
                       {item.tags.map((tag) => (
@@ -337,7 +429,7 @@ export default function UploadPage() {
                       ))}
                       <Input
                         placeholder="태그 입력 후 Enter"
-                        className="h-7 w-32 text-xs"
+                        className="h-7 w-32 text-xs rounded-lg"
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyDown={(e) => {

@@ -41,6 +41,14 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (parent) {
+        // 10-level hierarchy check: root(0) + 9 sub-levels = max 9 slashes
+        const parentDepth = parent.path.split('/').length
+        if (parentDepth >= 10) {
+          return NextResponse.json(
+            { error: '최대 10단계까지만 폴더를 생성할 수 있습니다.' },
+            { status: 400 }
+          )
+        }
         path = `${parent.path}/${name}`
       }
     }
