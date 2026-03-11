@@ -8,10 +8,6 @@ export async function GET(request: NextRequest) {
     const user = await getAuthUser()
     const { searchParams } = new URL(request.url)
     const categoryId = searchParams.get('category_id')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = (page - 1) * limit
-
     const supabase = createServiceClient()
 
     // Resolve user role (fallback to email lookup for Vercel production)
@@ -28,31 +24,48 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    let query = supabase
-      .from('documents')
-      .select('*, document_tags(tag_id, tags(name))', { count: 'exact' })
+    // Fetch all documents using paginated queries (Supabase max 1000 per request)
+    const PAGE_SIZE = 1000
+    let allData: Record<string, unknown>[] = []
+    let totalCount = 0
+    let offset = 0
+    let hasMore = true
 
-    // Staff can only see general documents
-    if (userRole !== 'admin') {
-      query = query.eq('security_level', 'general')
-    }
+    while (hasMore) {
+      let query = supabase
+        .from('documents')
+        .select('*, document_tags(tag_id, tags(name))', { count: 'exact' })
 
-    if (categoryId) {
-      query = query.eq('category_id', categoryId)
-    }
+      if (userRole !== 'admin') {
+        query = query.eq('security_level', 'general')
+      }
 
-    const { data, error, count } = await query
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+      if (categoryId) {
+        query = query.eq('category_id', categoryId)
+      }
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      const { data, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1)
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      if (count !== null && offset === 0) {
+        totalCount = count
+      }
+
+      allData = [...allData, ...(data || [])]
+      hasMore = (data?.length ?? 0) === PAGE_SIZE
+      offset += PAGE_SIZE
     }
 
     // 태그 이름 평탄화
-    const documents = (data || []).map((doc) => {
-      const tags = (doc.document_tags || [])
-        .map((dt: { tags: { name: string } | null }) => dt.tags?.name)
+    const documents = allData.map((doc) => {
+      const docTags = (doc.document_tags as Array<{ tags: { name: string } | null }>) || []
+      const tags = docTags
+        .map((dt) => dt.tags?.name)
         .filter(Boolean)
       const { document_tags: _, ...rest } = doc
       return { ...rest, tags }
@@ -60,9 +73,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       documents,
-      total: count ?? 0,
-      page,
-      limit,
+      total: totalCount,
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Server error'
