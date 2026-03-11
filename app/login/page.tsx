@@ -71,10 +71,10 @@ export default function LoginPage() {
             className="mx-auto rounded-lg"
           />
           <h1 className="text-3xl font-black tracking-tight">
-            Manual Repositories
+            Docu Box
           </h1>
           <p className="text-sm text-muted-foreground">
-            Bloter/Numbers 업무 매뉴얼 문서함
+            Bloter/Numbers 비편집국 각종 문서
           </p>
         </div>
         <div className="space-y-3">
