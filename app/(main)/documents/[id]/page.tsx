@@ -224,14 +224,14 @@ export default function DocumentDetailPage() {
             <CardContent>
               {isImage && (
                 <img
-                  src={`/api/documents/${id}/view`}
+                  src={`/api/documents/${id}/view?user_email=${encodeURIComponent(user.email)}`}
                   alt={doc.title}
                   className="max-w-full rounded-md"
                 />
               )}
               {isPdf && (
                 <iframe
-                  src={`/api/documents/${id}/view`}
+                  src={`/api/documents/${id}/view?user_email=${encodeURIComponent(user.email)}`}
                   className="w-full h-[600px] rounded-md border"
                   title={doc.title}
                 />
