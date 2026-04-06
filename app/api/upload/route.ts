@@ -58,7 +58,16 @@ export async function POST(request: NextRequest) {
 
     // 파일 정보
     const fileExtension = getFileExtension(file.name)
-    const fileType = file.type || 'application/octet-stream'
+    const extMimeMap: Record<string, string> = {
+      '.zip': 'application/zip',
+      '.rar': 'application/x-rar-compressed',
+      '.7z': 'application/x-7z-compressed',
+      '.tar': 'application/x-tar',
+      '.gz': 'application/gzip',
+      '.hwp': 'application/x-hwp',
+      '.hwpx': 'application/hwp+zip',
+    }
+    const fileType = file.type || extMimeMap[fileExtension] || 'application/octet-stream'
 
     // 임시 ID 생성 (UUID 형태)
     const fileId = crypto.randomUUID()

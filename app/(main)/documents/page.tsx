@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useState, useMemo, memo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -16,14 +16,17 @@ import {
   Calendar,
   ChevronRight,
   ChevronDown,
+  Loader2,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { FileIcon } from '@/components/file-icon'
 import { cn, formatFileSize, formatDate, naturalCompare } from '@/lib/utils'
-import { toast } from 'sonner'
 import { useUser } from '@/components/user-provider'
+import { useDocumentsPaginated, useDocumentsAll } from '@/hooks/use-documents'
+import { useBookmarks } from '@/hooks/use-bookmarks'
+import { useCategories } from '@/hooks/use-categories'
 import type { Document, Category } from '@/lib/types'
 
 type GroupMode = 'all' | 'folder' | 'date'
@@ -40,18 +43,15 @@ function buildFolderTree(
 ): FolderTreeNode[] {
   const catMap = new Map<string, FolderTreeNode>()
 
-  // Create nodes for all categories
   categories.forEach((cat) => {
     catMap.set(cat.id, { category: cat, docs: [], children: [] })
   })
 
-  // Assign documents to their category nodes
   documents.forEach((doc) => {
     const node = catMap.get(doc.category_id)
     if (node) node.docs.push(doc)
   })
 
-  // Build tree
   const roots: FolderTreeNode[] = []
   categories.forEach((cat) => {
     const node = catMap.get(cat.id)!
@@ -63,7 +63,6 @@ function buildFolderTree(
     }
   })
 
-  // Sort children naturally (sort_order first, then name)
   const sortNodes = (nodes: FolderTreeNode[]) => {
     nodes.sort((a, b) => {
       if (a.category.sort_order !== b.category.sort_order)
@@ -74,7 +73,6 @@ function buildFolderTree(
   }
   sortNodes(roots)
 
-  // Filter out empty branches (no docs anywhere in subtree)
   const hasDocsInSubtree = (node: FolderTreeNode): boolean =>
     node.docs.length > 0 || node.children.some(hasDocsInSubtree)
 
@@ -104,7 +102,6 @@ function FolderTreeView({
   renderGridItem: (doc: Document) => React.ReactNode
 }) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
-    // Auto-expand first 2 levels
     const ids = new Set<string>()
     nodes.forEach((n) => {
       ids.add(n.category.id)
@@ -132,7 +129,6 @@ function FolderTreeView({
 
         return (
           <div key={node.category.id}>
-            {/* Folder header */}
             <button
               className={cn(
                 'w-full flex items-center gap-2 rounded-xl px-3 py-2.5 text-left transition-colors',
@@ -164,10 +160,8 @@ function FolderTreeView({
               </span>
             </button>
 
-            {/* Expanded content */}
             {isExpanded && (
               <div className="mt-1">
-                {/* Direct documents */}
                 {hasDocs && (
                   <div
                     style={{ paddingLeft: depth * 20 + 32 }}
@@ -185,7 +179,6 @@ function FolderTreeView({
                   </div>
                 )}
 
-                {/* Sub-folders (recursive) */}
                 {hasChildren && (
                   <FolderTreeView
                     nodes={node.children}
@@ -204,188 +197,81 @@ function FolderTreeView({
   )
 }
 
-export default function DocumentsPage() {
-  const searchParams = useSearchParams()
-  const categoryId = searchParams.get('category')
-  const user = useUser()
-  const [documents, setDocuments] = useState<Document[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
-  const [groupMode, setGroupMode] = useState<GroupMode>('all')
-  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set())
-
-  const fetchDocuments = useCallback(async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (categoryId) params.set('category_id', categoryId)
-      params.set('user_email', user.email)
-      const res = await fetch(`/api/documents?${params}`)
-      if (res.ok) {
-        const data = await res.json()
-        setDocuments(data.documents)
-        setTotal(data.total)
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false)
-    }
-  }, [categoryId, user.email])
-
-  const fetchBookmarks = useCallback(async () => {
-    try {
-      const res = await fetch(
-        `/api/bookmarks?user_email=${encodeURIComponent(user.email)}`
-      )
-      if (res.ok) {
-        const data = await res.json()
-        if (Array.isArray(data)) {
-          setBookmarkedIds(
-            new Set(data.map((bm: { document_id: string }) => bm.document_id))
-          )
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }, [user.email])
-
-  useEffect(() => {
-    fetchDocuments()
-    fetchBookmarks()
-    fetch('/api/categories')
-      .then((r) => r.json())
-      .then(setCategories)
-      .catch(() => {})
-  }, [fetchDocuments, fetchBookmarks])
-
-  const toggleBookmark = async (docId: string, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    try {
-      const res = await fetch('/api/bookmarks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ document_id: docId, user_email: user.email }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setBookmarkedIds((prev) => {
-          const next = new Set(prev)
-          if (data.bookmarked) {
-            next.add(docId)
-          } else {
-            next.delete(docId)
-          }
-          return next
-        })
-        toast.success(data.bookmarked ? '북마크 추가됨' : '북마크 제거됨')
-      } else {
-        toast.error('북마크 처리에 실패했습니다.')
-      }
-    } catch {
-      toast.error('네트워크 오류가 발생했습니다.')
-    }
-  }
-
-  // Build category name map
-  const categoryNameMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    categories.forEach((c) => {
-      map[c.id] = c.path || c.name
-    })
-    return map
-  }, [categories])
-
-  // Folder tree for tree view
-  const folderTree = useMemo(
-    () => buildFolderTree(categories, documents),
-    [categories, documents]
-  )
-
-  // Group documents by date (non-folder mode)
-  const groupedByDate = useMemo(() => {
-    if (groupMode !== 'date') return null
-    const groups: Record<string, Document[]> = {}
-    documents.forEach((doc) => {
-      const date = new Date(doc.created_at)
-      const key = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
-      if (!groups[key]) groups[key] = []
-      groups[key].push(doc)
-    })
-    const sortedKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a))
-    return sortedKeys.map((key) => ({ label: key, docs: groups[key] }))
-  }, [documents, groupMode])
-
-  const renderDocItem = (doc: Document) => {
-    const isBookmarked = bookmarkedIds.has(doc.id)
-    return (
-      <Link
-        key={doc.id}
-        href={`/documents/${doc.id}`}
-        className="flex items-center gap-4 rounded-xl border bg-card p-4 hover:bg-accent/50 transition-colors"
-      >
-        <FileIcon
-          fileName={doc.file_name}
-          fileExtension={doc.file_extension}
-          className="h-8 w-8 shrink-0"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-medium truncate">{doc.title}</p>
-            {doc.security_level === 'confidential' && (
-              <Badge variant="destructive" className="shrink-0 text-xs">
-                <Shield className="h-3 w-3 mr-1" />
-                대외비
-              </Badge>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground truncate">
-            {doc.file_name} · {doc.author_name} ·{' '}
-            {formatDate(doc.created_at)}
-            {doc.file_size && ` · ${formatFileSize(doc.file_size)}`}
-          </p>
-          {doc.tags && doc.tags.length > 0 && (
-            <div className="flex gap-1 mt-1">
-              {doc.tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
+// Memoized document item to prevent unnecessary re-renders
+const DocListItem = memo(function DocListItem({
+  doc,
+  isBookmarked,
+  onToggleBookmark,
+  userEmail,
+}: {
+  doc: Document
+  isBookmarked: boolean
+  onToggleBookmark: (docId: string, e: React.MouseEvent) => void
+  userEmail: string
+}) {
+  return (
+    <Link
+      href={`/documents/${doc.id}`}
+      className="flex items-center gap-4 rounded-xl border bg-card p-4 hover:bg-accent/50 transition-colors"
+    >
+      <FileIcon
+        fileName={doc.file_name}
+        fileExtension={doc.file_extension}
+        className="h-8 w-8 shrink-0"
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium truncate">{doc.title}</p>
+          {doc.security_level === 'confidential' && (
+            <Badge variant="destructive" className="shrink-0 text-xs">
+              <Shield className="h-3 w-3 mr-1" />
+              대외비
+            </Badge>
           )}
         </div>
-        <div className="flex gap-1 shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => toggleBookmark(doc.id, e)}
+        <p className="text-xs text-muted-foreground truncate">
+          {doc.file_name} · {doc.author_name} ·{' '}
+          {formatDate(doc.created_at)}
+          {doc.file_size && ` · ${formatFileSize(doc.file_size)}`}
+        </p>
+        {doc.tags && doc.tags.length > 0 && (
+          <div className="flex gap-1 mt-1">
+            {doc.tags.map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="flex gap-1 shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => onToggleBookmark(doc.id, e)}
+        >
+          {isBookmarked ? (
+            <BookmarkCheck className="h-4 w-4 fill-current" />
+          ) : (
+            <Bookmark className="h-4 w-4" />
+          )}
+        </Button>
+        <Button variant="ghost" size="icon" asChild>
+          <a
+            href={`/api/documents/${doc.id}/download?user_email=${encodeURIComponent(userEmail)}`}
+            onClick={(e) => e.stopPropagation()}
           >
-            {isBookmarked ? (
-              <BookmarkCheck className="h-4 w-4 fill-current" />
-            ) : (
-              <Bookmark className="h-4 w-4" />
-            )}
-          </Button>
-          <Button variant="ghost" size="icon" asChild>
-            <a
-              href={`/api/documents/${doc.id}/download?user_email=${encodeURIComponent(user.email)}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Download className="h-4 w-4" />
-            </a>
-          </Button>
-        </div>
-      </Link>
-    )
-  }
+            <Download className="h-4 w-4" />
+          </a>
+        </Button>
+      </div>
+    </Link>
+  )
+})
 
-  const renderGridItem = (doc: Document) => (
+const DocGridItem = memo(function DocGridItem({ doc }: { doc: Document }) {
+  return (
     <Link
-      key={doc.id}
       href={`/documents/${doc.id}`}
       className="rounded-xl border bg-card p-4 hover:bg-accent/50 transition-colors flex flex-col"
     >
@@ -403,6 +289,63 @@ export default function DocumentsPage() {
       </p>
     </Link>
   )
+})
+
+export default function DocumentsPage() {
+  const searchParams = useSearchParams()
+  const categoryId = searchParams.get('category')
+  const user = useUser()
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
+  const [groupMode, setGroupMode] = useState<GroupMode>('all')
+
+  // Paginated data for list/grid/date views
+  const paginated = useDocumentsPaginated(user.email, categoryId)
+  // Full data for folder tree view (only fetched when folder mode is active)
+  const allDocs = useDocumentsAll(user.email, categoryId, groupMode === 'folder')
+
+  const { bookmarkedIds, toggleBookmark } = useBookmarks(user.email)
+  const { categories } = useCategories()
+
+  // Pick the right data source based on group mode
+  const documents = groupMode === 'folder'
+    ? allDocs.documents
+    : paginated.documents
+  const total = groupMode === 'folder' ? allDocs.total : paginated.total
+  const isLoading = groupMode === 'folder' ? allDocs.isLoading : paginated.isLoading
+
+  // Folder tree (only computed in folder mode)
+  const folderTree = useMemo(
+    () => groupMode === 'folder' ? buildFolderTree(categories, documents) : [],
+    [categories, documents, groupMode]
+  )
+
+  // Date groups (only computed in date mode)
+  const groupedByDate = useMemo(() => {
+    if (groupMode !== 'date') return null
+    const groups: Record<string, Document[]> = {}
+    documents.forEach((doc) => {
+      const date = new Date(doc.created_at)
+      const key = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
+      if (!groups[key]) groups[key] = []
+      groups[key].push(doc)
+    })
+    const sortedKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a))
+    return sortedKeys.map((key) => ({ label: key, docs: groups[key] }))
+  }, [documents, groupMode])
+
+  const renderDocItem = (doc: Document) => (
+    <DocListItem
+      key={doc.id}
+      doc={doc}
+      isBookmarked={bookmarkedIds.has(doc.id)}
+      onToggleBookmark={toggleBookmark}
+      userEmail={user.email}
+    />
+  )
+
+  const renderGridItem = (doc: Document) => (
+    <DocGridItem key={doc.id} doc={doc} />
+  )
 
   return (
     <>
@@ -411,7 +354,7 @@ export default function DocumentsPage() {
         {/* Toolbar */}
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-muted-foreground">
-            {loading ? '불러오는 중...' : `총 ${total}개 문서`}
+            {isLoading ? '불러오는 중...' : `총 ${total}개 문서`}
           </p>
           <div className="flex gap-1">
             {/* Group mode */}
@@ -459,13 +402,12 @@ export default function DocumentsPage() {
         </div>
 
         {/* Document list */}
-        {documents.length === 0 && !loading ? (
+        {documents.length === 0 && !isLoading ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <FileText className="h-12 w-12 mb-4" />
             <p>문서가 없습니다</p>
           </div>
         ) : groupMode === 'folder' ? (
-          // Folder tree view
           <FolderTreeView
             nodes={folderTree}
             depth={0}
@@ -474,7 +416,6 @@ export default function DocumentsPage() {
             renderGridItem={renderGridItem}
           />
         ) : groupMode === 'date' && groupedByDate ? (
-          // Date grouped view
           <div className="space-y-6">
             {groupedByDate.map((group) => (
               <div key={group.label}>
@@ -506,6 +447,27 @@ export default function DocumentsPage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {documents.map(renderGridItem)}
+          </div>
+        )}
+
+        {/* Load more button (paginated views only) */}
+        {groupMode !== 'folder' && paginated.hasMore && (
+          <div className="flex justify-center mt-6">
+            <Button
+              variant="outline"
+              onClick={paginated.loadMore}
+              disabled={paginated.isValidating}
+              className="min-w-[200px]"
+            >
+              {paginated.isValidating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  불러오는 중...
+                </>
+              ) : (
+                `더 보기 (${documents.length}/${total})`
+              )}
+            </Button>
           </div>
         )}
       </div>

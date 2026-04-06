@@ -1,97 +1,23 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { FileText, Bookmark, BookmarkCheck } from 'lucide-react'
 import { FileIcon } from '@/components/file-icon'
 import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
 import { useUser } from '@/components/user-provider'
-
-type RecentDoc = {
-  id: string
-  title: string
-  file_name: string
-  file_type: string
-  file_extension?: string | null
-  security_level?: string
-  author_name: string
-  created_at: string
-}
+import { useDocumentsPaginated } from '@/hooks/use-documents'
+import { useBookmarks } from '@/hooks/use-bookmarks'
+import type { Document } from '@/lib/types'
 
 export function RecentDocList() {
   const user = useUser()
-  const [docs, setDocs] = useState<RecentDoc[]>([])
-  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set())
-  const [loading, setLoading] = useState(true)
+  // SWR-cached: 5 recent documents (reuses cache across navigation)
+  const { documents, isLoading } = useDocumentsPaginated(user.email)
+  const { bookmarkedIds, toggleBookmark } = useBookmarks(user.email)
 
-  const fetchDocs = useCallback(async () => {
-    try {
-      const res = await fetch(
-        `/api/documents?limit=5&user_email=${encodeURIComponent(user.email)}`
-      )
-      if (res.ok) {
-        const data = await res.json()
-        setDocs(data.documents || [])
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false)
-    }
-  }, [user.email])
+  const recentDocs = documents.slice(0, 5)
 
-  const fetchBookmarks = useCallback(async () => {
-    try {
-      const res = await fetch(
-        `/api/bookmarks?user_email=${encodeURIComponent(user.email)}`
-      )
-      if (res.ok) {
-        const data = await res.json()
-        if (Array.isArray(data)) {
-          setBookmarkedIds(
-            new Set(data.map((bm: { document_id: string }) => bm.document_id))
-          )
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }, [user.email])
-
-  useEffect(() => {
-    fetchDocs()
-    fetchBookmarks()
-  }, [fetchDocs, fetchBookmarks])
-
-  const toggleBookmark = async (docId: string, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    try {
-      const res = await fetch('/api/bookmarks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ document_id: docId, user_email: user.email }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setBookmarkedIds((prev) => {
-          const next = new Set(prev)
-          if (data.bookmarked) {
-            next.add(docId)
-          } else {
-            next.delete(docId)
-          }
-          return next
-        })
-        toast.success(data.bookmarked ? '북마크 추가됨' : '북마크 제거됨')
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="rounded-lg border bg-card p-8 text-center">
         <p className="text-sm text-muted-foreground">불러오는 중...</p>
@@ -99,7 +25,7 @@ export function RecentDocList() {
     )
   }
 
-  if (docs.length === 0) {
+  if (recentDocs.length === 0) {
     return (
       <div className="rounded-lg border bg-card p-8 text-center">
         <FileText className="mx-auto h-10 w-10 text-muted-foreground/40" />
@@ -112,7 +38,7 @@ export function RecentDocList() {
 
   return (
     <div className="space-y-2">
-      {docs.map((doc) => {
+      {recentDocs.map((doc) => {
         const isBookmarked = bookmarkedIds.has(doc.id)
         return (
           <Link

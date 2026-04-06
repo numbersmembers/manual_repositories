@@ -85,6 +85,10 @@ CREATE INDEX idx_documents_security ON documents(security_level);
 CREATE INDEX idx_documents_created ON documents(created_at DESC);
 CREATE INDEX idx_documents_search ON documents USING GIN(search_vector);
 
+-- Composite indexes for common query patterns
+CREATE INDEX idx_documents_security_created ON documents(security_level, created_at DESC);
+CREATE INDEX idx_documents_category_security ON documents(category_id, security_level, created_at DESC);
+
 -- 4. Tags
 CREATE TABLE tags (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -17,8 +17,9 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { FileIcon } from '@/components/file-icon'
 import { formatFileSize, formatDate } from '@/lib/utils'
-import { toast } from 'sonner'
 import { useUser } from '@/components/user-provider'
+import { useDocumentSearch } from '@/hooks/use-documents'
+import { useBookmarks } from '@/hooks/use-bookmarks'
 import type { Document } from '@/lib/types'
 
 function SearchResults() {
@@ -27,82 +28,14 @@ function SearchResults() {
   const q = searchParams.get('q') || ''
   const user = useUser()
   const [query, setQuery] = useState(q)
-  const [results, setResults] = useState<Document[]>([])
-  const [loading, setLoading] = useState(false)
-  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set())
 
-  const fetchResults = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
-      setResults([])
-      return
-    }
-    setLoading(true)
-    try {
-      const res = await fetch(
-        `/api/documents/search?q=${encodeURIComponent(searchQuery)}&limit=50`
-      )
-      if (res.ok) {
-        const data = await res.json()
-        setResults(Array.isArray(data) ? data : [])
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const fetchBookmarks = useCallback(async () => {
-    try {
-      const res = await fetch(
-        `/api/bookmarks?user_email=${encodeURIComponent(user.email)}`
-      )
-      if (res.ok) {
-        const data = await res.json()
-        if (Array.isArray(data)) {
-          setBookmarkedIds(
-            new Set(data.map((bm: { document_id: string }) => bm.document_id))
-          )
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }, [user.email])
-
-  useEffect(() => {
-    fetchResults(q)
-    fetchBookmarks()
-  }, [q, fetchResults, fetchBookmarks])
+  const { results, isLoading } = useDocumentSearch(q, user.email)
+  const { bookmarkedIds, toggleBookmark } = useBookmarks(user.email)
 
   const handleSearch = () => {
     const trimmed = query.trim()
     if (!trimmed) return
     router.push(`/search?q=${encodeURIComponent(trimmed)}`)
-  }
-
-  const toggleBookmark = async (docId: string, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    try {
-      const res = await fetch('/api/bookmarks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ document_id: docId, user_email: user.email }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setBookmarkedIds((prev) => {
-          const next = new Set(prev)
-          if (data.bookmarked) next.add(docId)
-          else next.delete(docId)
-          return next
-        })
-        toast.success(data.bookmarked ? '북마크 추가됨' : '북마크 제거됨')
-      }
-    } catch {
-      // ignore
-    }
   }
 
   return (
@@ -129,7 +62,7 @@ function SearchResults() {
 
         {/* Results info */}
         <p className="text-sm text-muted-foreground mb-4">
-          {loading
+          {isLoading
             ? '검색 중...'
             : q
               ? `"${q}" 검색 결과 ${results.length}건`
@@ -139,7 +72,7 @@ function SearchResults() {
         {/* Results list */}
         {results.length > 0 && (
           <div className="space-y-2">
-            {results.map((doc) => {
+            {results.map((doc: Document) => {
               const isBookmarked = bookmarkedIds.has(doc.id)
               return (
                 <Link
@@ -169,7 +102,7 @@ function SearchResults() {
                     </p>
                     {doc.tags && doc.tags.length > 0 && (
                       <div className="flex gap-1 mt-1">
-                        {doc.tags.map((tag) => (
+                        {doc.tags.map((tag: string) => (
                           <Badge key={tag} variant="outline" className="text-xs">
                             {tag}
                           </Badge>
@@ -204,7 +137,7 @@ function SearchResults() {
           </div>
         )}
 
-        {!loading && q && results.length === 0 && (
+        {!isLoading && q && results.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <FileText className="h-12 w-12 mb-4" />
             <p>검색 결과가 없습니다</p>

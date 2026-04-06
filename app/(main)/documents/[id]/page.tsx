@@ -38,7 +38,7 @@ export default function DocumentDetailPage() {
     async function fetchData() {
       try {
         const [docRes, commentsRes, bmRes] = await Promise.all([
-          fetch(`/api/documents/${id}`),
+          fetch(`/api/documents/${id}?user_email=${encodeURIComponent(user.email)}`),
           fetch(`/api/comments?document_id=${id}`),
           fetch(`/api/bookmarks?user_email=${encodeURIComponent(user.email)}`),
         ])

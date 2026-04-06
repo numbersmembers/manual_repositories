@@ -10,9 +10,22 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthUser()
+    let user = await getAuthUser()
     const { id } = await params
     const supabase = createServiceClient()
+
+    // Fallback: look up user by email if cookie auth fails (Vercel production)
+    if (!user) {
+      const userEmail = _request.nextUrl.searchParams.get('user_email')
+      if (userEmail) {
+        const { data: u } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', userEmail)
+          .single()
+        if (u) user = u as typeof user
+      }
+    }
 
     const { data, error } = await supabase
       .from('documents')
