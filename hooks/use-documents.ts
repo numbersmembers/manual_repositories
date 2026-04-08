@@ -44,7 +44,7 @@ export function useDocumentsPaginated(
   return { documents, total, isLoading, isValidating, hasMore, loadMore, mutate }
 }
 
-/** Load all documents in one shot (for folder tree view) */
+/** Load all documents via batch fetch (for folder tree view) */
 export function useDocumentsAll(
   userEmail: string,
   categoryId?: string | null,
@@ -52,8 +52,7 @@ export function useDocumentsAll(
 ) {
   const params = new URLSearchParams()
   params.set('user_email', userEmail)
-  params.set('page', '1')
-  params.set('limit', '1000')
+  params.set('fetchAll', 'true')
   if (categoryId) params.set('category_id', categoryId)
 
   const { data, error, mutate } = useSWR<DocumentsPage>(

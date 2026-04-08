@@ -76,7 +76,10 @@ export async function POST(request: NextRequest) {
     // Supabase Storage에 업로드
     const { error: uploadError } = await uploadFile(supabase, file, storagePath)
     if (uploadError) {
-      return NextResponse.json({ error: uploadError }, { status: 500 })
+      return NextResponse.json(
+        { error: `Storage upload failed: ${uploadError}` },
+        { status: 500 }
+      )
     }
 
     // DB에 문서 레코드 생성
